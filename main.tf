@@ -13,3 +13,15 @@ module "vpc" {
   private_subnet_name = var.private_subnet_name
 }
 
+module "alb" {
+  source = "./modules/alb"
+  security_groups = [ module.vpc.alb_sg_id ]
+  vpc_id = module.vpc.vpc_id
+  subnets = [ module.vpc.public_subnet_id ]
+
+  enable_https = false
+  healthy_threshold = 3
+  unhealthy_threshold = 2
+  health_check_path = "/"
+}
+
