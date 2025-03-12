@@ -1,0 +1,13 @@
+*.env
+*.pem
+
+# VSCode
+.vscode/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+*.tfstate.lock.hcl
+.terraform.lock.hcl
