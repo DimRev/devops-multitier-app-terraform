@@ -25,7 +25,7 @@ variable "public_subnet_availability_zone" {
 variable "public_subnet_name" {
   description = "The name of the public subnet."
   type        = string
-  default = "public-1"
+  default     = "public-1"
 }
 
 variable "private_subnet_cidr_block" {
@@ -43,6 +43,6 @@ variable "private_subnet_availability_zone" {
 variable "private_subnet_name" {
   description = "The name of the private subnet."
   type        = string
-  default = "private-1"
+  default     = "private-1"
 }
 
