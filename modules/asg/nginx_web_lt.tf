@@ -13,13 +13,28 @@ data "aws_ami" "amazon_linux_2_free_tier" {
   }
 }
 
+data "template_file" "nginx_userdata" {
+  template = file("${path.module}/templates/nginx_userdata.tpl")
+  vars = {
+    s3_bucket = var.s3_bucket_name
+  }
+}
+
+resource "aws_key_pair" "my_key" {
+  key_name   = var.key_pair_name
+  public_key = file(var.public_key_path)
+}
+
+
 resource "aws_launch_template" "nginx_web_lt" {
   name_prefix   = "${var.nginx_lt_name_prefix}-"
   image_id      = data.aws_ami.amazon_linux_2_free_tier.id
   instance_type = var.nginx_lt_instance_type
+  key_name      = aws_key_pair.my_key.key_name
 
   network_interfaces {
-    associate_carrier_ip_address = true
+    # Remove or set to false if not using AWS Outposts
+    associate_carrier_ip_address = false
     security_groups              = var.nginx_lt_security_groups
   }
 
@@ -27,25 +42,8 @@ resource "aws_launch_template" "nginx_web_lt" {
     name = var.nginx_lt_instance_profile_name
   }
 
-  user_data = base64encode(<<EOF
-#!/bin/bash
-yum update -y
-amazon-linux-extras install nginx -y
-systemctl enable nginx
-systemctl start nginx
-cat <<EOM > /usr/share/nginx/html/index.html
-<html>
-  <head>
-    <title>Hello, World!</title>
-  </head>
-  <body>
-    <h1>Hello, World!</h1>
-    <p>This is a simple web server running on an EC2 instance.</p>
-  </body>
-</html>
-EOM
-EOF
-  )
+  user_data = base64encode(data.template_file.nginx_userdata.rendered)
+
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -53,3 +51,4 @@ EOF
     }
   }
 }
+

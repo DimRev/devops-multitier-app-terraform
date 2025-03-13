@@ -1,0 +1,22 @@
+digraph Modules {
+  rankdir="LR";
+  node [shape=box, style=filled, fontname="sans-serif"];
+
+  VPC      [label="VPC Module", fillcolor="cyan"];
+  ALB      [label="ALB Module", fillcolor="lightblue"];
+  ASG      [label="ASG Module", fillcolor="lightgreen"];
+  BASTION  [label="Bastion Module", fillcolor="yellow"];
+  RDS      [label="RDS Module", fillcolor="pink"];
+  SEC      [label="Security Module", fillcolor="lightgrey"];
+  S3       [label="S3 Module", fillcolor="gold"];
+
+  // Relationships between modules
+  VPC -> ALB;
+  VPC -> ASG;
+  VPC -> RDS;
+  VPC -> BASTION;
+  SEC -> ASG;
+  SEC -> RDS;
+  BASTION -> ASG [label="Debug/SSH"];
+  S3 -> VPC [label="Remote State"];
+}

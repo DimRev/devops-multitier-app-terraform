@@ -12,11 +12,11 @@ resource "aws_security_group" "rds_sg" {
   }
 
   egress {
-    description     = "Allow outbound traffic to anywhere"
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["0.0.0.0/0"]
+    description = "Allow outbound traffic to anywhere"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {

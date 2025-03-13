@@ -37,6 +37,11 @@ module "asg" {
   nginx_lt_security_groups       = [module.vpc.ec2_sg_id]
   nginx_lt_instance_profile_name = module.security.iam_instance_profile
 
+  key_pair_name   = var.key_pair_name
+  public_key_path = var.public_key_path
+
+  s3_bucket_name = data.aws_s3_bucket.s3.bucket
+
   scale_out_adjustment = 1
   scale_in_adjustment  = -1
   cpu_low_threshold    = 20
@@ -56,15 +61,24 @@ module "rds" {
   subnet_ids             = module.vpc.private_subnet_ids
 }
 
-module "s3" {
-  source      = "./modules/s3"
-  bucket_name = var.s3_bucket_name
-  tags        = var.s3_bucket_tags
+
+data "aws_s3_bucket" "s3" {
+  bucket = var.s3_bucket_name
 }
 
 module "security" {
   source                = "./modules/security"
   ec2_role_name         = "ec2-role"
-  s3_bucket_arn         = module.s3.bucket_arn
+  s3_bucket_arn         = data.aws_s3_bucket.s3.arn
   instance_profile_name = "ec2-instance-profile"
+}
+
+
+module "bastion" {
+  source            = "./modules/bastion"
+  module_name       = "my-bastion"
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_id  = module.vpc.public_subnet_ids[0]
+  key_name          = module.asg.key_pair_name
+  allowed_ssh_cidrs = ["0.0.0.0/0"] # TODO: Add your IP range here
 }

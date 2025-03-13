@@ -10,6 +10,10 @@ resource "aws_db_instance" "default" {
   vpc_security_group_ids = var.rds_security_group_ids
   db_subnet_group_name   = aws_db_subnet_group.default.name
   multi_az               = true
+
+  tags = {
+    Name = "${var.vpc_name}-rds-instance"
+  }
 }
 
 resource "aws_db_subnet_group" "default" {

@@ -1,3 +1,16 @@
+variable "key_pair_name" {
+  description = "Name for the AWS key pair"
+  type        = string
+  default     = "my-key"
+}
+
+variable "public_key_path" {
+  description = "Path to the local public key file"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+
 variable "nginx_lt_name_prefix" {
   description = "The name prefix for the NGINX Launch Template."
   type        = string
@@ -23,6 +36,11 @@ variable "nginx_lt_security_groups" {
 
 variable "nginx_lt_instance_profile_name" {
   description = "The name of the instance profile to associate with the NGINX Launch Template."
+  type        = string
+}
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket to store the NGINX index.html file."
   type        = string
 }
 

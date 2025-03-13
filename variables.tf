@@ -17,11 +17,18 @@ variable "public_subnet_obj_list" {
     availability_zone = string
     name              = string
   }))
-  default = [{
-    cidr_block        = "10.0.1.0/24"
-    availability_zone = "us-east-1a"
-    name              = "public-1"
-  }]
+  default = [
+    {
+      cidr_block        = "10.0.1.0/24"
+      availability_zone = "us-east-1a"
+      name              = "public-1"
+    },
+    {
+      cidr_block        = "10.0.2.0/24"
+      availability_zone = "us-east-1b"
+      name              = "public-2"
+    }
+  ]
 }
 
 variable "private_subnet_obj_list" {
@@ -31,12 +38,20 @@ variable "private_subnet_obj_list" {
     availability_zone = string
     name              = string
   }))
-  default = [{
-    cidr_block        = "10.0.2.0/24"
-    availability_zone = "us-east-1a"
-    name              = "private-1"
-  }]
+  default = [
+    {
+      cidr_block        = "10.0.3.0/24"
+      availability_zone = "us-east-1a"
+      name              = "private-1"
+    },
+    {
+      cidr_block        = "10.0.4.0/24"
+      availability_zone = "us-east-1b"
+      name              = "private-2"
+    }
+  ]
 }
+
 
 
 variable "db_engine" {
@@ -64,17 +79,23 @@ variable "db_root_password" {
 }
 
 
+variable "key_pair_name" {
+  description = "Name for the AWS key pair"
+  type        = string
+  default     = "my-key"
+}
+
+variable "public_key_path" {
+  description = "Path to the local public key file"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+
 variable "s3_bucket_name" {
   description = "The name of the S3 bucket."
   type        = string
   default     = "multitier-app-s3-bucket"
 }
 
-variable "s3_bucket_tags" {
-  description = "A map of tags to assign to the bucket."
-  type        = map(string)
-  default = {
-    Environment = "Dev"
-    Project     = "multitier-app"
-  }
-}
+
