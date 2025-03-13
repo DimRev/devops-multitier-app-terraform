@@ -4,20 +4,16 @@ module "vpc" {
   vpc_cidr_block = var.vpc_cidr_block
   vpc_name       = var.vpc_name
   # Public Subnet
-  public_subnet_cidr_block        = var.public_subnet_cidr_block
-  public_subnet_availability_zone = var.public_subnet_availability_zone
-  public_subnet_name              = var.public_subnet_name
+  public_subnet_obj_list = var.public_subnet_obj_list
   # Private Subnet
-  private_subnet_cidr_block        = var.private_subnet_cidr_block
-  private_subnet_availability_zone = var.private_subnet_availability_zone
-  private_subnet_name              = var.private_subnet_name
+  private_subnet_obj_list = var.private_subnet_obj_list
 }
 
 module "alb" {
   source          = "./modules/alb"
   security_groups = [module.vpc.alb_sg_id]
   vpc_id          = module.vpc.vpc_id
-  subnets         = [module.vpc.public_subnet_id]
+  subnets         = module.vpc.public_subnet_ids
 
   enable_https        = false
   healthy_threshold   = 3
@@ -33,11 +29,12 @@ module "asg" {
   asg_max_size         = 4
   asg_desired_capacity = 3
   asg_min_size         = 2
-  asg_subnets          = [module.vpc.public_subnet_id]
+  asg_subnets          = module.vpc.private_subnet_ids
 
-  nginx_lt_instance_type = "t3.micro"
-  nginx_lt_name_prefix   = "nginx-lt"
-  nginx_lt_instance_name = "nginx-lt-instance"
+  nginx_lt_instance_type   = "t3.micro"
+  nginx_lt_name_prefix     = "nginx-lt"
+  nginx_lt_instance_name   = "nginx-lt-instance"
+  nginx_lt_security_groups = [module.vpc.ec2_sg_id]
 
   scale_out_adjustment = 1
   scale_in_adjustment  = -1
@@ -45,4 +42,15 @@ module "asg" {
   cpu_high_threshold   = 80
 
   target_group_arns = [module.alb.target_group_arn]
+}
+
+module "rds" {
+  source                 = "./modules/rds"
+  db_engine              = var.db_engine
+  db_engine_version      = var.db_engine_version
+  db_root_username       = var.db_root_username
+  db_root_password       = var.db_root_password
+  rds_security_group_ids = [module.vpc.rds_sg_id]
+  vpc_name               = var.vpc_name
+  subnet_ids             = module.vpc.private_subnet_ids
 }

@@ -10,6 +10,7 @@ resource "aws_internet_gateway" "igw" {
 
 resource "aws_eip" "nat_eip" {
   tags = {
-    Name = "${var.public_subnet_name}-nat-eip"
+    Name = "nat-eip"
   }
 }
+
