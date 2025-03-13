@@ -63,3 +63,18 @@ variable "db_root_password" {
   default     = "password"
 }
 
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket."
+  type        = string
+  default     = "multitier-app-s3-bucket"
+}
+
+variable "s3_bucket_tags" {
+  description = "A map of tags to assign to the bucket."
+  type        = map(string)
+  default = {
+    Environment = "Dev"
+    Project     = "multitier-app"
+  }
+}

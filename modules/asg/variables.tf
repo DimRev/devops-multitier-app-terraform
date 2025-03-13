@@ -21,6 +21,11 @@ variable "nginx_lt_security_groups" {
   type        = list(string)
 }
 
+variable "nginx_lt_instance_profile_name" {
+  description = "The name of the instance profile to associate with the NGINX Launch Template."
+  type        = string
+}
+
 variable "asg_name" {
   description = "The name of the ASG."
   type        = string

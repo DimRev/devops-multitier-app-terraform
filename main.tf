@@ -31,10 +31,11 @@ module "asg" {
   asg_min_size         = 2
   asg_subnets          = module.vpc.private_subnet_ids
 
-  nginx_lt_instance_type   = "t3.micro"
-  nginx_lt_name_prefix     = "nginx-lt"
-  nginx_lt_instance_name   = "nginx-lt-instance"
-  nginx_lt_security_groups = [module.vpc.ec2_sg_id]
+  nginx_lt_instance_type         = "t3.micro"
+  nginx_lt_name_prefix           = "nginx-lt"
+  nginx_lt_instance_name         = "nginx-lt-instance"
+  nginx_lt_security_groups       = [module.vpc.ec2_sg_id]
+  nginx_lt_instance_profile_name = module.security.iam_instance_profile
 
   scale_out_adjustment = 1
   scale_in_adjustment  = -1
@@ -53,4 +54,17 @@ module "rds" {
   rds_security_group_ids = [module.vpc.rds_sg_id]
   vpc_name               = var.vpc_name
   subnet_ids             = module.vpc.private_subnet_ids
+}
+
+module "s3" {
+  source      = "./modules/s3"
+  bucket_name = var.s3_bucket_name
+  tags        = var.s3_bucket_tags
+}
+
+module "security" {
+  source                = "./modules/security"
+  ec2_role_name         = "ec2-role"
+  s3_bucket_arn         = module.s3.bucket_arn
+  instance_profile_name = "ec2-instance-profile"
 }

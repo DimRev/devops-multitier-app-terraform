@@ -23,6 +23,10 @@ resource "aws_launch_template" "nginx_web_lt" {
     security_groups              = var.nginx_lt_security_groups
   }
 
+  iam_instance_profile {
+    name = var.nginx_lt_instance_profile_name
+  }
+
   user_data = base64encode(<<EOF
 #!/bin/bash
 yum update -y
