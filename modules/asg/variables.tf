@@ -16,6 +16,11 @@ variable "nginx_lt_instance_name" {
   default     = "nginx-lt-instance"
 }
 
+variable "nginx_lt_security_groups" {
+  description = "The security groups to associate with the NGINX Launch Template."
+  type        = list(string)
+}
+
 variable "asg_name" {
   description = "The name of the ASG."
   type        = string
