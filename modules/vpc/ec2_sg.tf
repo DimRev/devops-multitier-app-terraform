@@ -1,5 +1,5 @@
 resource "aws_security_group" "ec2_sg" {
-  name        = "${var.vpc_name}-ec2-sg"
+  name        = local.ec2_sg_name
   description = "Security group for EC2 instances"
   vpc_id      = aws_vpc.main.id
 
@@ -36,6 +36,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-ec2-sg"
+    Name = local.ec2_sg_name
+    Env  = var.environment
   }
 }

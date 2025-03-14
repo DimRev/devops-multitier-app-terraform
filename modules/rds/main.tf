@@ -1,3 +1,8 @@
+locals {
+  rds_name    = "${var.environment}-${var.rds_name}-rds-rds"
+  rds_sg_name = "${var.environment}-${var.rds_name}-rds_sg-rds"
+}
+
 resource "aws_db_instance" "default" {
   allocated_storage   = 10
   engine              = var.db_engine
@@ -12,16 +17,18 @@ resource "aws_db_instance" "default" {
   multi_az               = true
 
   tags = {
-    Name = "${var.vpc_name}-rds-instance"
+    Name = local.rds_name
+    Env  = var.environment
   }
 }
 
 resource "aws_db_subnet_group" "default" {
-  name       = "${var.vpc_name}-rds-subnet-group"
+  name       = local.rds_sg_name
   subnet_ids = var.subnet_ids
 
   tags = {
-    Name = "${var.vpc_name}-rds-subnet-group"
+    Name = local.rds_sg_name
+    Env  = var.environment
   }
 }
 

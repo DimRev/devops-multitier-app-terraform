@@ -9,6 +9,7 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = var.public_subnet_obj_list[count.index].name
+    Env  = var.environment
   }
 }
 
@@ -22,7 +23,7 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name = "public-rt"
+    Name = local.public_route_table_name
   }
 }
 

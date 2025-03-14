@@ -37,3 +37,8 @@ variable "private_subnet_obj_list" {
     name              = "private-1"
   }]
 }
+
+variable "environment" {
+  description = "The environment name (DEV, QA, PROD, etc.)"
+  type        = string
+}

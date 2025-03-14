@@ -1,3 +1,8 @@
+locals {
+  bastion_name    = "${var.environment}-${var.bastion_name}-bastion-bastion"
+  bastion_sg_name = "${var.environment}-${var.bastion_name}-bastion_sg-bastion"
+}
+
 data "aws_ami" "amazon_linux_2_free_tier" {
   most_recent = true
   owners      = ["amazon"]
@@ -14,7 +19,7 @@ data "aws_ami" "amazon_linux_2_free_tier" {
 }
 
 resource "aws_security_group" "bastion_sg" {
-  name        = "${var.module_name}-bastion-sg"
+  name        = local.bastion_sg_name
   description = "Security group for the Bastion host"
   vpc_id      = var.vpc_id
 
@@ -35,7 +40,8 @@ resource "aws_security_group" "bastion_sg" {
   }
 
   tags = {
-    Name = "${var.module_name}-bastion-sg"
+    Name = local.bastion_name
+    Env  = var.environment
   }
 }
 
@@ -48,6 +54,7 @@ resource "aws_instance" "bastion" {
   associate_public_ip_address = true
 
   tags = {
-    Name = "${var.module_name}-bastion"
+    Name = local.bastion_name
+    Env  = var.environment
   }
 }

@@ -7,7 +7,7 @@ variable "vpc_cidr_block" {
 variable "vpc_name" {
   description = "The name of the VPC."
   type        = string
-  default     = "multitier-app-vpc"
+  default     = "multitier_app_vpc"
 }
 
 variable "public_subnet_obj_list" {
@@ -52,7 +52,35 @@ variable "private_subnet_obj_list" {
   ]
 }
 
+variable "asg_name" {
+  description = "The name of the ASG."
+  type        = string
+  default     = "nginx_asg"
+}
 
+variable "asg_instance_name" {
+  description = "The name of the ASG instance."
+  type        = string
+  default     = "nginx_asg_instance"
+}
+
+variable "nginx_lt_name_prefix" {
+  description = "The name prefix for the NGINX Launch Template."
+  type        = string
+  default     = "nginx_lt"
+}
+
+variable "nginx_lt_instance_name" {
+  description = "The name for the ASG instance in the NGINX Launch Template."
+  type        = string
+  default     = "nginx_lt_instance"
+}
+
+variable "rds_name" {
+  description = "The name of the RDS instance."
+  type        = string
+  default     = "rds_instance"
+}
 
 variable "db_engine" {
   description = "Database engine type"
@@ -91,6 +119,17 @@ variable "public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
+variable "ec2_role_name" {
+  description = "The name of the IAM role for EC2"
+  type        = string
+  default     = "ec2_role"
+}
+
+variable "ec2_instance_profile_name" {
+  description = "The name of the EC2 instance profile"
+  type        = string
+  default     = "ec2_instance_profile"
+}
 
 variable "s3_bucket_name" {
   description = "The name of the S3 bucket."
@@ -99,3 +138,14 @@ variable "s3_bucket_name" {
 }
 
 
+variable "environment" {
+  description = "The environment name (DEV, QA, PROD, etc.)"
+  type        = string
+  default     = "dev"
+}
+
+variable "bastion_name" {
+  description = "The name of the bastion host."
+  type        = string
+  default     = "bastion"
+}

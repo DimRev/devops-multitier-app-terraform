@@ -19,5 +19,7 @@ variable "instance_profile_name" {
   default     = "ec2-instance-profile"
 }
 
-
-
+variable "environment" {
+  description = "The environment name (DEV, QA, PROD, etc.)"
+  type        = string
+}

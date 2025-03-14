@@ -1,6 +1,6 @@
 
 resource "aws_autoscaling_policy" "scaling_out" {
-  name                   = "${var.asg_name}-scaling-out"
+  name                   = local.scale_out_policy_name
   scaling_adjustment     = var.scale_out_adjustment
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
@@ -9,7 +9,7 @@ resource "aws_autoscaling_policy" "scaling_out" {
 
 
 resource "aws_autoscaling_policy" "scale_in" {
-  name                   = "${var.asg_name}-cpu-low"
+  name                   = local.scale_in_policy_name
   scaling_adjustment     = var.scale_in_adjustment
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300

@@ -111,3 +111,8 @@ variable "target_group_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "environment" {
+  description = "The environment name (DEV, QA, PROD, etc.)"
+  type        = string
+}

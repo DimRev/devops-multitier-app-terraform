@@ -3,6 +3,7 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = aws_subnet.public[0].id # First public subnet
 
   tags = {
-    Name = "public-nat"
+    Name = local.nat_name
+    Env  = var.environment
   }
 }

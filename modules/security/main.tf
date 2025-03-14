@@ -1,3 +1,9 @@
+locals {
+  ec2_role_name             = "${var.environment}-${var.ec2_role_name}-ec2-role-security"
+  ec2_policy_name           = "${var.environment}-${var.ec2_role_name}-ec2-policy-security"
+  ec2_instance_profile_name = "${var.environment}-${var.instance_profile_name}-ec2-instance_profile-security"
+}
+
 resource "aws_s3_bucket_policy" "alb_logs_policy" {
   bucket = var.s3_bucket_id
   policy = jsonencode({
@@ -24,7 +30,7 @@ resource "aws_s3_bucket_policy" "alb_logs_policy" {
 
 
 resource "aws_iam_role" "ec2_role" {
-  name = var.ec2_role_name
+  name = local.ec2_role_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -40,7 +46,7 @@ resource "aws_iam_role" "ec2_role" {
 
 
 resource "aws_iam_policy" "ec2_policy" {
-  name        = "ec2-s3-read-policy"
+  name        = local.ec2_policy_name
   description = "Allows EC2 instances to read from S3 buckets"
 
   policy = jsonencode({

@@ -1,3 +1,10 @@
+locals {
+  alb_name            = "${var.environment}-${var.alb_name}-alb-alb"
+  target_group_name   = "${var.environment}-${var.alb_name}-tg-alb"
+  http_listener_name  = "${var.environment}-${var.alb_name}-http_listener-alb"
+  https_listener_name = "${var.environment}-${var.alb_name}-https_listener-alb"
+}
+
 resource "aws_lb" "main" {
   name               = var.alb_name
   internal           = false
@@ -11,7 +18,8 @@ resource "aws_lb" "main" {
     prefix  = "logs/alb"
   }
   tags = {
-    Name = var.alb_name
+    Name = local.alb_name
+    Env  = var.environment
   }
 }
 
@@ -32,7 +40,8 @@ resource "aws_lb_target_group" "main" {
   }
 
   tags = {
-    Name = "${var.alb_name}-tg"
+    Name = local.target_group_name
+    Env  = var.environment
   }
 }
 
@@ -48,6 +57,11 @@ resource "aws_lb_listener" "http" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main.arn
   }
+
+  tags = {
+    Name = local.http_listener_name
+    Env  = var.environment
+  }
 }
 
 # HTTPS Listener (conditionally created)
@@ -61,5 +75,10 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main.arn
+  }
+
+  tags = {
+    Name = local.https_listener_name
+    Env  = var.environment
   }
 }

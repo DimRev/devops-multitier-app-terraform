@@ -1,4 +1,3 @@
-# PRIVATE
 resource "aws_subnet" "private" {
   count  = length(var.private_subnet_obj_list)
   vpc_id = aws_vpc.main.id
@@ -9,6 +8,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = var.private_subnet_obj_list[count.index].name
+    Env  = var.environment
   }
 }
 
@@ -22,7 +22,7 @@ resource "aws_route_table" "private_rt" {
   }
 
   tags = {
-    Name = "private-rt"
+    Name = local.private_route_table_name
   }
 }
 

@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "${var.asg_name}-cpu-high"
+  alarm_name          = local.cpu_high_alarm_name
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
@@ -13,10 +13,15 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.nginx_web_asg.name
   }
+
+  tags = {
+    Name = local.cpu_high_alarm_name
+    Env  = var.environment
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
-  alarm_name          = "${var.asg_name}-cpu-low"
+  alarm_name          = local.cpu_low_alarm_name
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
@@ -31,4 +36,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
     AutoScalingGroupName = aws_autoscaling_group.nginx_web_asg.name
   }
 
+  tags = {
+    Name = local.cpu_low_alarm_name
+    Env  = var.environment
+  }
 }

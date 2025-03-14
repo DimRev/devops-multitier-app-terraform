@@ -1,5 +1,5 @@
 resource "aws_security_group" "rds_sg" {
-  name        = "${var.vpc_name}-rds-sg"
+  name        = local.rds_sg_name
   description = "Security group for RDS"
   vpc_id      = aws_vpc.main.id
 
@@ -20,6 +20,6 @@ resource "aws_security_group" "rds_sg" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-rds-sg"
+    Name = local.rds_sg_name
   }
 }

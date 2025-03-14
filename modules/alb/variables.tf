@@ -64,3 +64,8 @@ variable "certificate_arn" {
   type        = string
   default     = ""
 }
+
+variable "environment" {
+  description = "The environment name (DEV, QA, PROD, etc.)"
+  type        = string
+}

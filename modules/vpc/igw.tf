@@ -1,16 +1,17 @@
-## INTERNET GATEWAY
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-igw"
+    Name = local.igw_name
+    Env  = var.environment
   }
 }
 
 resource "aws_eip" "nat_eip" {
   tags = {
-    Name = "nat-eip"
+    Name = local.nat_eip_name
+    Env  = var.environment
   }
 }
 

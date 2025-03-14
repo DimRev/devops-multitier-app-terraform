@@ -47,7 +47,8 @@ resource "aws_launch_template" "nginx_web_lt" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = var.nginx_lt_instance_name
+      Name = local.nginx_lt_name
+      Env  = var.environment
     }
   }
 }
