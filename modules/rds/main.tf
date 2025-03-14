@@ -12,6 +12,8 @@ resource "aws_db_instance" "default" {
   password            = var.db_root_password
   skip_final_snapshot = true
 
+  identifier = "${var.environment}-rds-instance"
+
   vpc_security_group_ids = var.rds_security_group_ids
   db_subnet_group_name   = aws_db_subnet_group.default.name
   multi_az               = true

@@ -49,6 +49,11 @@ The project is organized into reusable Terraform modules:
   - Create an S3 bucket and DynamoDB table for Terraform state management.
 - **SSH Public Key**:
   - Your local public key file (typically located at `~/.ssh/id_rsa.pub`) must be available. This key is used to create an AWS key pair and allows you to SSH into your instances (via the bastion host).
+- **Assets Bucket**:
+  - Create an S3 bucket to store the Terraform assets, the bucket will store the HTML files that get served by the ALB.
+  - The bucket is defined under the variable `s3_bucket_name` in the `variables.tf` file.
+  - The bucket must be in the same region as the VPC.
+  - The bucket will store the logs for the ALB and the ASG.
 
 ## Deployment Steps
 
@@ -119,3 +124,38 @@ ssh ec2-user@<private_instance_ip>
   - Follow least-privilege principles when configuring IAM roles and security groups.
 - **Bastion Host**:
   - Use the bastion host to troubleshoot and debug issues by connecting to your private instances without exposing them directly.
+
+## Deployment Preview
+
+### VPC Resource Map:
+
+![VPC Resource Map](assets/vpc_resource_map.png)
+
+- VPC (10.0.0.0/16)
+  - 2 Private Subnets (10.0.3.0/24, 10.0.4.0/24)
+  - 2 Public Subnets (10.0.1.0/24, 10.0.2.0/24)
+  - Internet Gateway (igw-multitier-app-vpc)
+  - NAT Gateway (nat-multitier-app-vpc)
+  - Route Tables
+    - Private (private-rt-multitier-app-vpc)
+    - Public (public-rt-multitier-app-vpc)
+
+### ALB Resource Map:
+
+![ALB Resource Map](assets/alb_resource_map.png)
+
+- ALB (multitier-app-alb)
+  - Listener (HTTP, HTTPS)
+  - Target Group (multitier-app-tg)
+  - Targets (multitier-app-nginx-lt-instance)
+
+### EC2 Instances:
+
+![EC2 Instances](assets/ec2_instances.png)
+
+- Nginx Web Server (multitier-app-nginx-lt-instance)
+- Bastion Instance (bastion)
+
+### Serving Page
+
+![HTTP Requests](assets/http_request.png)
