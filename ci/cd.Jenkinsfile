@@ -29,21 +29,17 @@ pipeline {
         }
         stage('Terraform Init') {
             steps {
-                // Use the AWS credentials for Terraform operations with no color output
+                // Use the AWS credentials for Terraform operations with no color output and pass the correct public_key_path variable
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
-                    // If needed, pass the public_key_path variable to Terraform:
-                    // sh 'terraform init --upgrade -no-color -var "public_key_path=${WORKSPACE}/id_rsa.pub"'
-                    sh 'terraform init --upgrade -no-color'
+                    sh 'terraform init --upgrade -no-color -var "public_key_path=${WORKSPACE}/id_rsa.pub"'
                 }
             }
         }
         stage('Terraform Plan') {
             steps {
-                // Run Terraform plan with no color output
+                // Run Terraform plan with no color output and pass the correct public_key_path variable
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
-                    // If needed, pass the public_key_path variable to Terraform:
-                    // sh 'terraform plan -no-color -var "public_key_path=${WORKSPACE}/id_rsa.pub"'
-                    sh 'terraform plan -no-color'
+                    sh 'terraform plan -no-color -var "public_key_path=${WORKSPACE}/id_rsa.pub"'
                 }
             }
         }
