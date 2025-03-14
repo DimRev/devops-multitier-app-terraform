@@ -6,6 +6,8 @@ locals {
   ec2_sg_name              = "${var.environment}-${var.vpc_name}-ec2_sg-vpc"
   alb_sg_name              = "${var.environment}-${var.vpc_name}-alb_sg-vpc"
   rds_sg_name              = "${var.environment}-${var.vpc_name}-rds-sg-vpc"
+  bastion_sg_name          = "${var.environment}-${var.vpc_name}-bastion_sg-vpc"
+  jenkins_sg_name          = "${var.environment}-${var.vpc_name}-jenkins_sg-vpc"
   private_subnet_name      = "${var.environment}-${var.vpc_name}-private_subnet-vpc"
   private_route_table_name = "${var.environment}-${var.vpc_name}-private_rt-vpc"
   public_subnet_name       = "${var.environment}-${var.vpc_name}-public_subnet-vpc"

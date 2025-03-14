@@ -3,6 +3,9 @@ module "vpc" {
   # VPC
   vpc_cidr_block = var.vpc_cidr_block
   vpc_name       = var.vpc_name
+
+  bastion_allowed_ssh_cidrs = ["0.0.0.0/0"] # TODO: Add your IP range here
+
   # Public Subnet
   public_subnet_obj_list = var.public_subnet_obj_list
   # Private Subnet
@@ -10,7 +13,7 @@ module "vpc" {
   environment             = var.environment
 }
 
-module "alb" {
+module "nginx_alb" {
   source = "./modules/alb"
   vpc_id = module.vpc.vpc_id
 
@@ -26,7 +29,7 @@ module "alb" {
 }
 
 
-module "asg" {
+module "nginx_asg" {
   source               = "./modules/asg"
   asg_name             = var.asg_name
   asg_instance_name    = var.asg_instance_name
@@ -51,7 +54,7 @@ module "asg" {
   cpu_low_threshold    = 20
   cpu_high_threshold   = 80
 
-  target_group_arns = [module.alb.target_group_arn]
+  target_group_arns = [module.nginx_alb.target_group_arn]
   environment       = var.environment
 }
 
@@ -81,13 +84,28 @@ module "security" {
   environment           = var.environment
 }
 
-
 module "bastion" {
-  source            = "./modules/bastion"
-  bastion_name      = var.bastion_name
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_id  = module.vpc.public_subnet_ids[0]
-  key_name          = module.asg.key_pair_name
-  allowed_ssh_cidrs = ["0.0.0.0/0"] # TODO: Add your IP range here
-  environment       = var.environment
+  source           = "./modules/ec2"
+  ec2_name         = "bastion"
+  key_name         = module.nginx_asg.key_pair_name
+  public_subnet_id = module.vpc.public_subnet_ids[0]
+  ec2_sg_id        = module.vpc.bastion_sg_id
+  assign_eip       = true
+  environment      = var.environment
+}
+
+data "template_file" "jenkins_userdata" {
+  template = file("${path.module}/templates/jenkins_userdata.tpl")
+}
+
+module "jenkins" {
+  source           = "./modules/ec2"
+  ec2_name         = "jenkins"
+  key_name         = module.nginx_asg.key_pair_name
+  public_subnet_id = module.vpc.public_subnet_ids[0]
+  ec2_sg_id        = module.vpc.jenkins_sg_id
+  assign_eip       = true
+  environment      = var.environment
+
+  base64encoded_user_data = base64encode(data.template_file.jenkins_userdata.rendered)
 }

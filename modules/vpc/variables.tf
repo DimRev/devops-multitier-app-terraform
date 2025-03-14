@@ -38,6 +38,12 @@ variable "private_subnet_obj_list" {
   }]
 }
 
+variable "bastion_allowed_ssh_cidrs" {
+  description = "List of allowed CIDR blocks for SSH ingress"
+  type        = list(string)
+  default     = ["YOUR_PUBLIC_IP/32"] # Replace YOUR_PUBLIC_IP with your actual public IP (e.g., "203.0.113.4/32")
+}
+
 variable "environment" {
   description = "The environment name (DEV, QA, PROD, etc.)"
   type        = string
