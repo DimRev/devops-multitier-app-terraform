@@ -18,25 +18,23 @@ pipeline {
         }
         stage('Checkout Code') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
-                    git url: 'https://github.com/DimRev/devops-multitier-app-terraform.git', branch: 'main'
-                }
+                // Checkout code from Git
+                git url: 'https://github.com/DimRev/devops-multitier-app-terraform.git', branch: 'f-14/03/25-setup-jenkins-and-ci-cd'
             }
         }
-
         stage('Terraform Init') {
             steps {
-                // Use the same AWS credentials for Terraform operations
+                // Use the AWS credentials for Terraform operations with no color output
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
-                    sh 'terraform init --upgrade'
+                    sh 'terraform init --upgrade -no-color'
                 }
             }
         }
-        stage('Terraform Apply') {
+        stage('Terraform Plan') {
             steps {
+                // Run Terraform plan with no color output
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
-                    // sh 'terraform apply -auto-approve'
-                    sh 'terraform plan'
+                    sh 'terraform plan -no-color'
                 }
             }
         }
