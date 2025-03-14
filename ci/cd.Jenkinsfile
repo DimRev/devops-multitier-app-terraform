@@ -24,7 +24,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 // Checkout code from Git
-                git url: 'https://github.com/DimRev/devops-multitier-app-terraform.git', branch: 'f-14/03/25-setup-jenkins-and-ci-cd'
+                git url: 'https://github.com/DimRev/devops-multitier-app-terraform.git', branch: 'main'
             }
         }
         stage('Terraform Init') {
