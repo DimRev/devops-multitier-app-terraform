@@ -15,27 +15,28 @@ The following diagram illustrates the core architecture:
 - **Database**: A secure, Multi-AZ RDS MySQL instance accessible only from the private subnets.
 - **Security**: Configured through IAM roles, security groups, and remote state management using S3 and DynamoDB.
 - **Bastion Host**: A dedicated bastion (jump box) is deployed in a public subnet. **This host is used for debugging and troubleshooting** by allowing you to securely SSH into private EC2 instances without exposing them directly to the internet.
+- **Jenkins CI/CD**: A Jenkins server (also deployed as an EC2 instance) orchestrates deployments using Terraform. The server securely injects sensitive data (like SSH keys) as secrets during pipeline runs.
 
 ## Module Structure
 
-The project is organized into reusable Terraform modules:
+The project is organized into several reusable Terraform modules, each responsible for a specific area of the architecture:
 
 ![Module Structure](assets/graph2.png)
 
 - **VPC Module**:
-  - Manages the VPC, subnets, gateways, and routing.
+  - Creates the VPC, subnets (public and private), Internet and NAT Gateways, and routing configurations.
 - **ALB Module**:
-  - Sets up the Application Load Balancer with conditional HTTP/HTTPS listeners.
+  - Sets up the Application Load Balancer with conditional HTTP/HTTPS listeners, target groups, and access logging.
 - **ASG Module**:
-  - Deploys EC2 instances using launch templates with user data for bootstrapping Nginx and auto scaling.
+  - Deploys an Auto Scaling Group of EC2 instances using a launch template. The launch template bootstraps Nginx via a user data script, pulling assets from S3.
 - **RDS Module**:
-  - Deploys a Multi-AZ RDS MySQL instance.
+  - Provisions a secure, Multi-AZ RDS MySQL instance along with its subnet group.
 - **S3 Module**:
-  - Creates (or references) an S3 bucket for state storage and artifacts.
+  - Configures IAM roles, policies, and instance profiles for EC2 instances. It also sets bucket policies for ALB log storage.
 - **Security Module**:
-  - Configures IAM roles, policies, and instance profiles.
+  - Deploys a bastion host in a public subnet to enable secure SSH access into private resources for debugging.
 - **Bastion Module**:
-  - Provides a jump box in a public subnet that is used for debugging purposes and for securely accessing private instances.
+  - Deploys a Jenkins server (using a slightly larger EC2 instance type) that runs the CI/CD pipelines. The Jenkins instance also receives injected user data and credentials via secure secrets.
 
 ## Getting Started
 
@@ -48,12 +49,9 @@ The project is organized into reusable Terraform modules:
 - **Backend Setup**:
   - Create an S3 bucket and DynamoDB table for Terraform state management.
 - **SSH Public Key**:
-  - Your local public key file (typically located at `~/.ssh/id_rsa.pub`) must be available. This key is used to create an AWS key pair and allows you to SSH into your instances (via the bastion host).
+  - Ensure you have your local public key (typically located at `~/.ssh/id_rsa.pub`). This key is used to create an AWS key pair that allows secure SSH access to instances (injected as a secret into the Jenkins pipeline).
 - **Assets Bucket**:
-  - Create an S3 bucket to store the Terraform assets, the bucket will store the HTML files that get served by the ALB.
-  - The bucket is defined under the variable `s3_bucket_name` in the `variables.tf` file.
-  - The bucket must be in the same region as the VPC.
-  - The bucket will store the logs for the ALB and the ASG.
+  - Create (or reference) an S3 bucket to store Terraform artifacts and HTML files for Nginx. This bucket is defined via the s3_bucket_name variable and must reside in the same region as the VPC.
 
 ## Deployment Steps
 
@@ -79,14 +77,6 @@ terraform apply
 
    - Key outputs include the ALB DNS name, ASG details, RDS endpoint, and Bastion Host public IP.
 
-## Cleanup
-
-To destroy all resources created by this Terraform configuration, run the following command:
-
-```bash
-terraform destroy
-```
-
 ## Debugging & SSH Access
 
 - **Bastion Host Access**:
@@ -109,10 +99,54 @@ ssh ec2-user@<private_instance_ip>
 
 3. Troubleshooting 502 Errors:
    - A 502 Bad Gateway error from the ALB indicates that the backend (EC2) instances are not responding correctly. Check:
+   - Target group health checks and instance status.
+   - Nginx service on the instances.
+   - That the user data script executed successfully (for bootstrapping Nginx and copying web files).
 
-- Target group health checks and instance status.
-- Nginx service on the instances.
-- That the user data script executed successfully (for bootstrapping Nginx and copying web files).
+## Jenkins Setup
+
+The Jenkins server is deployed as part of the infrastructure and is used to orchestrate Terraform deployments via pipelines.
+
+1. **Access Jenkins**:
+
+   - SSH into the Jenkins server:
+
+```bash
+ssh -i ~/.ssh/id_rsa ec2-user@<jenkins_public_ip>
+```
+
+    - Retrieve the initial admin password:
+
+```bash
+cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+2.  Connect via Browser:
+
+    - Open: `http://<jenkins_public_ip>:8080`
+
+3.  Configure Jenkins:
+
+    - Create an Admin user.
+    - Install required plugins including the `AWS Credentials Plugin`.
+    - Define a pipeline that pulls the Terraform code from this repository (e.g., using `ci/cd.Jenkinsfile`).
+
+4.  SSH Key Injection:
+
+    - The Jenkins pipeline securely injects your SSH public key (stored as a secret under the ID s`sh_rsa_pub`) into the workspace so Terraform can create the key pair without referencing a local file path.
+
+```jenkins
+stage('Prepare SSH Key') {
+    steps {
+        withCredentials([string(credentialsId: 'ssh_rsa_pub', variable: 'SSH_RSA_PUB')]) {
+            sh 'echo "$SSH_RSA_PUB" > ${WORKSPACE}/id_rsa.pub'
+        }
+    }
+}
+// Terraform commands then reference the file via -var "public_key_path=${WORKSPACE}/id_rsa.pub"
+```
+
+![Jenkins Pipeline](assets/ci_pipeline.png)
 
 ## Troubleshooting & Tips
 

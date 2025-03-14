@@ -2,33 +2,43 @@ digraph G {
   rankdir = "RL";
   node [shape = rect, fontname = "sans-serif"];
   "data.aws_s3_bucket.s3" [label="data.aws_s3_bucket.s3"];
-  subgraph "cluster_module.alb" {
-    label = "module.alb"
-    fontname = "sans-serif"
-    "module.alb.aws_lb.main" [label="aws_lb.main"];
-    "module.alb.aws_lb_listener.http" [label="aws_lb_listener.http"];
-    "module.alb.aws_lb_listener.https" [label="aws_lb_listener.https"];
-    "module.alb.aws_lb_target_group.main" [label="aws_lb_target_group.main"];
-  }
-  subgraph "cluster_module.asg" {
-    label = "module.asg"
-    fontname = "sans-serif"
-    "module.asg.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
-    "module.asg.data.template_file.nginx_userdata" [label="data.template_file.nginx_userdata"];
-    "module.asg.aws_autoscaling_group.nginx_web_asg" [label="aws_autoscaling_group.nginx_web_asg"];
-    "module.asg.aws_autoscaling_policy.scale_in" [label="aws_autoscaling_policy.scale_in"];
-    "module.asg.aws_autoscaling_policy.scaling_out" [label="aws_autoscaling_policy.scaling_out"];
-    "module.asg.aws_cloudwatch_metric_alarm.cpu_high" [label="aws_cloudwatch_metric_alarm.cpu_high"];
-    "module.asg.aws_cloudwatch_metric_alarm.cpu_low" [label="aws_cloudwatch_metric_alarm.cpu_low"];
-    "module.asg.aws_key_pair.my_key" [label="aws_key_pair.my_key"];
-    "module.asg.aws_launch_template.nginx_web_lt" [label="aws_launch_template.nginx_web_lt"];
-  }
+  "data.template_file.jenkins_userdata" [label="data.template_file.jenkins_userdata"];
   subgraph "cluster_module.bastion" {
     label = "module.bastion"
     fontname = "sans-serif"
     "module.bastion.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
-    "module.bastion.aws_instance.bastion" [label="aws_instance.bastion"];
-    "module.bastion.aws_security_group.bastion_sg" [label="aws_security_group.bastion_sg"];
+    "module.bastion.aws_eip.ece_ec2" [label="aws_eip.ece_ec2"];
+    "module.bastion.aws_eip_association.eip_assoc" [label="aws_eip_association.eip_assoc"];
+    "module.bastion.aws_instance.ec2_instance" [label="aws_instance.ec2_instance"];
+  }
+  subgraph "cluster_module.jenkins" {
+    label = "module.jenkins"
+    fontname = "sans-serif"
+    "module.jenkins.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
+    "module.jenkins.aws_eip.ece_ec2" [label="aws_eip.ece_ec2"];
+    "module.jenkins.aws_eip_association.eip_assoc" [label="aws_eip_association.eip_assoc"];
+    "module.jenkins.aws_instance.ec2_instance" [label="aws_instance.ec2_instance"];
+  }
+  subgraph "cluster_module.nginx_alb" {
+    label = "module.nginx_alb"
+    fontname = "sans-serif"
+    "module.nginx_alb.aws_lb.main" [label="aws_lb.main"];
+    "module.nginx_alb.aws_lb_listener.http" [label="aws_lb_listener.http"];
+    "module.nginx_alb.aws_lb_listener.https" [label="aws_lb_listener.https"];
+    "module.nginx_alb.aws_lb_target_group.main" [label="aws_lb_target_group.main"];
+  }
+  subgraph "cluster_module.nginx_asg" {
+    label = "module.nginx_asg"
+    fontname = "sans-serif"
+    "module.nginx_asg.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
+    "module.nginx_asg.data.template_file.nginx_userdata" [label="data.template_file.nginx_userdata"];
+    "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" [label="aws_autoscaling_group.nginx_web_asg"];
+    "module.nginx_asg.aws_autoscaling_policy.scale_in" [label="aws_autoscaling_policy.scale_in"];
+    "module.nginx_asg.aws_autoscaling_policy.scaling_out" [label="aws_autoscaling_policy.scaling_out"];
+    "module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_high" [label="aws_cloudwatch_metric_alarm.cpu_high"];
+    "module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_low" [label="aws_cloudwatch_metric_alarm.cpu_low"];
+    "module.nginx_asg.aws_key_pair.my_key" [label="aws_key_pair.my_key"];
+    "module.nginx_asg.aws_launch_template.nginx_web_lt" [label="aws_launch_template.nginx_web_lt"];
   }
   subgraph "cluster_module.rds" {
     label = "module.rds"
@@ -56,38 +66,48 @@ digraph G {
     "module.vpc.aws_route_table_association.private_association" [label="aws_route_table_association.private_association"];
     "module.vpc.aws_route_table_association.public_association" [label="aws_route_table_association.public_association"];
     "module.vpc.aws_security_group.alb_sg" [label="aws_security_group.alb_sg"];
+    "module.vpc.aws_security_group.bastion_sg" [label="aws_security_group.bastion_sg"];
     "module.vpc.aws_security_group.ec2_sg" [label="aws_security_group.ec2_sg"];
+    "module.vpc.aws_security_group.jenkins_sg" [label="aws_security_group.jenkins_sg"];
     "module.vpc.aws_security_group.rds_sg" [label="aws_security_group.rds_sg"];
     "module.vpc.aws_subnet.private" [label="aws_subnet.private"];
     "module.vpc.aws_subnet.public" [label="aws_subnet.public"];
     "module.vpc.aws_vpc.main" [label="aws_vpc.main"];
   }
-  "module.alb.aws_lb.main" -> "data.aws_s3_bucket.s3";
-  "module.alb.aws_lb.main" -> "module.vpc.aws_security_group.alb_sg";
-  "module.alb.aws_lb.main" -> "module.vpc.aws_subnet.public";
-  "module.alb.aws_lb_listener.http" -> "module.alb.aws_lb.main";
-  "module.alb.aws_lb_listener.http" -> "module.alb.aws_lb_target_group.main";
-  "module.alb.aws_lb_listener.https" -> "module.alb.aws_lb.main";
-  "module.alb.aws_lb_listener.https" -> "module.alb.aws_lb_target_group.main";
-  "module.alb.aws_lb_target_group.main" -> "module.vpc.aws_vpc.main";
-  "module.asg.data.template_file.nginx_userdata" -> "data.aws_s3_bucket.s3";
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.alb.aws_lb_target_group.main";
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.asg.aws_launch_template.nginx_web_lt";
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.vpc.aws_subnet.private";
-  "module.asg.aws_autoscaling_policy.scale_in" -> "module.asg.aws_autoscaling_group.nginx_web_asg";
-  "module.asg.aws_autoscaling_policy.scaling_out" -> "module.asg.aws_autoscaling_group.nginx_web_asg";
-  "module.asg.aws_cloudwatch_metric_alarm.cpu_high" -> "module.asg.aws_autoscaling_policy.scaling_out";
-  "module.asg.aws_cloudwatch_metric_alarm.cpu_low" -> "module.asg.aws_autoscaling_policy.scale_in";
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.data.aws_ami.amazon_linux_2_free_tier";
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.data.template_file.nginx_userdata";
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.aws_key_pair.my_key";
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.security.aws_iam_instance_profile.ec2_profile";
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.vpc.aws_security_group.ec2_sg";
-  "module.bastion.aws_instance.bastion" -> "module.asg.aws_key_pair.my_key";
-  "module.bastion.aws_instance.bastion" -> "module.bastion.data.aws_ami.amazon_linux_2_free_tier";
-  "module.bastion.aws_instance.bastion" -> "module.bastion.aws_security_group.bastion_sg";
-  "module.bastion.aws_instance.bastion" -> "module.vpc.aws_subnet.public";
-  "module.bastion.aws_security_group.bastion_sg" -> "module.vpc.aws_vpc.main";
+  "module.bastion.aws_eip_association.eip_assoc" -> "module.bastion.aws_eip.ece_ec2";
+  "module.bastion.aws_eip_association.eip_assoc" -> "module.bastion.aws_instance.ec2_instance";
+  "module.bastion.aws_instance.ec2_instance" -> "module.bastion.data.aws_ami.amazon_linux_2_free_tier";
+  "module.bastion.aws_instance.ec2_instance" -> "module.nginx_asg.aws_key_pair.my_key";
+  "module.bastion.aws_instance.ec2_instance" -> "module.vpc.aws_security_group.bastion_sg";
+  "module.bastion.aws_instance.ec2_instance" -> "module.vpc.aws_subnet.public";
+  "module.jenkins.aws_eip_association.eip_assoc" -> "module.jenkins.aws_eip.ece_ec2";
+  "module.jenkins.aws_eip_association.eip_assoc" -> "module.jenkins.aws_instance.ec2_instance";
+  "module.jenkins.aws_instance.ec2_instance" -> "data.template_file.jenkins_userdata";
+  "module.jenkins.aws_instance.ec2_instance" -> "module.jenkins.data.aws_ami.amazon_linux_2_free_tier";
+  "module.jenkins.aws_instance.ec2_instance" -> "module.nginx_asg.aws_key_pair.my_key";
+  "module.jenkins.aws_instance.ec2_instance" -> "module.vpc.aws_security_group.jenkins_sg";
+  "module.jenkins.aws_instance.ec2_instance" -> "module.vpc.aws_subnet.public";
+  "module.nginx_alb.aws_lb.main" -> "data.aws_s3_bucket.s3";
+  "module.nginx_alb.aws_lb.main" -> "module.vpc.aws_security_group.alb_sg";
+  "module.nginx_alb.aws_lb.main" -> "module.vpc.aws_subnet.public";
+  "module.nginx_alb.aws_lb_listener.http" -> "module.nginx_alb.aws_lb.main";
+  "module.nginx_alb.aws_lb_listener.http" -> "module.nginx_alb.aws_lb_target_group.main";
+  "module.nginx_alb.aws_lb_listener.https" -> "module.nginx_alb.aws_lb.main";
+  "module.nginx_alb.aws_lb_listener.https" -> "module.nginx_alb.aws_lb_target_group.main";
+  "module.nginx_alb.aws_lb_target_group.main" -> "module.vpc.aws_vpc.main";
+  "module.nginx_asg.data.template_file.nginx_userdata" -> "data.aws_s3_bucket.s3";
+  "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.nginx_alb.aws_lb_target_group.main";
+  "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.nginx_asg.aws_launch_template.nginx_web_lt";
+  "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.vpc.aws_subnet.private";
+  "module.nginx_asg.aws_autoscaling_policy.scale_in" -> "module.nginx_asg.aws_autoscaling_group.nginx_web_asg";
+  "module.nginx_asg.aws_autoscaling_policy.scaling_out" -> "module.nginx_asg.aws_autoscaling_group.nginx_web_asg";
+  "module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_high" -> "module.nginx_asg.aws_autoscaling_policy.scaling_out";
+  "module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_low" -> "module.nginx_asg.aws_autoscaling_policy.scale_in";
+  "module.nginx_asg.aws_launch_template.nginx_web_lt" -> "module.nginx_asg.data.aws_ami.amazon_linux_2_free_tier";
+  "module.nginx_asg.aws_launch_template.nginx_web_lt" -> "module.nginx_asg.data.template_file.nginx_userdata";
+  "module.nginx_asg.aws_launch_template.nginx_web_lt" -> "module.nginx_asg.aws_key_pair.my_key";
+  "module.nginx_asg.aws_launch_template.nginx_web_lt" -> "module.security.aws_iam_instance_profile.ec2_profile";
+  "module.nginx_asg.aws_launch_template.nginx_web_lt" -> "module.vpc.aws_security_group.ec2_sg";
   "module.rds.aws_db_instance.default" -> "module.rds.aws_db_subnet_group.default";
   "module.rds.aws_db_instance.default" -> "module.vpc.aws_security_group.rds_sg";
   "module.rds.aws_db_subnet_group.default" -> "module.vpc.aws_subnet.private";
@@ -106,7 +126,9 @@ digraph G {
   "module.vpc.aws_route_table_association.public_association" -> "module.vpc.aws_route_table.public_rt";
   "module.vpc.aws_route_table_association.public_association" -> "module.vpc.aws_subnet.public";
   "module.vpc.aws_security_group.alb_sg" -> "module.vpc.aws_vpc.main";
+  "module.vpc.aws_security_group.bastion_sg" -> "module.vpc.aws_vpc.main";
   "module.vpc.aws_security_group.ec2_sg" -> "module.vpc.aws_security_group.alb_sg";
+  "module.vpc.aws_security_group.jenkins_sg" -> "module.vpc.aws_vpc.main";
   "module.vpc.aws_security_group.rds_sg" -> "module.vpc.aws_security_group.ec2_sg";
   "module.vpc.aws_subnet.private" -> "module.vpc.aws_vpc.main";
   "module.vpc.aws_subnet.public" -> "module.vpc.aws_vpc.main";

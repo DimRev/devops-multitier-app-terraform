@@ -1,44 +1,95 @@
-digraph ModuleStructure {
-  // Global graph settings
+digraph ProjectStructure {
   rankdir=LR;
-  splines=true;
-  nodesep=0.8;
-  ranksep=1.0;
-  labelloc="t";
-  label="Terraform Project Module Structure";
+  splines=ortho;
+  concentrate=true;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
 
-  // Default node style
-  node [shape=box, style=filled, fontname="sans-serif", fontsize=10, fillcolor="#ECF0F1"];
+  // Global Nodes
+  "S3 Bucket" [label="S3 Bucket\n(data.aws_s3_bucket.s3)", fillcolor=lightyellow];
+  "Jenkins UserData" [label="Jenkins UserData\n(data.template_file.jenkins_userdata)", fillcolor=lightyellow];
 
-  // Data resource node (external)
-  "data.aws_s3_bucket.s3" [label="data.aws_s3_bucket.s3", fillcolor="#F9E79F"];
+  // VPC Module Cluster
+  subgraph cluster_vpc {
+    label="Module: VPC";
+    style=filled;
+    fillcolor="#C8E6C9";
+    "VPC" [label="VPC\n(module.vpc)"];
+  }
 
-  // Module nodes
-  "module.vpc"      [label="module.vpc", fillcolor="#AED6F1"];
-  "module.alb"      [label="module.alb", fillcolor="#A9DFBF"];
-  "module.asg"      [label="module.asg", fillcolor="#FAD7A0"];
-  "module.rds"      [label="module.rds", fillcolor="#F5B7B1"];
-  "module.security" [label="module.security", fillcolor="#D7BDE2"];
-  "module.bastion"  [label="module.bastion", fillcolor="#F9E79F"];
+  // Security Module Cluster
+  subgraph cluster_security {
+    label="Module: Security";
+    style=filled;
+    fillcolor="#F5E1D7";
+    "Security" [label="Security\n(module.security)"];
+  }
 
-  // Edges with descriptive labels
-  // VPC provides networking information to ALB, ASG, RDS, and Bastion
-  "module.vpc" -> "module.alb" [label="provides VPC ID,\npublic subnets, ALB SG", color=blue];
-  "module.vpc" -> "module.asg" [label="provides private subnets", color=blue];
-  "module.vpc" -> "module.rds" [label="provides VPC & private subnets", color=blue];
-  "module.vpc" -> "module.bastion" [label="provides VPC & public subnet", color=blue];
+  // Nginx ALB Module Cluster
+  subgraph cluster_alb {
+    label="Module: Nginx ALB";
+    style=filled;
+    fillcolor="#FFE0B2";
+    "Nginx ALB" [label="Nginx ALB\n(module.nginx_alb)"];
+  }
 
-  // Data S3 Bucket for shared files and logging
-  "data.aws_s3_bucket.s3" -> "module.alb" [label="bucket for ALB logs", color=darkgreen];
-  "data.aws_s3_bucket.s3" -> "module.asg" [label="userdata source", color=darkgreen];
-  "data.aws_s3_bucket.s3" -> "module.security" [label="bucket ARN/ID", color=darkgreen];
+  // Nginx ASG Module Cluster
+  subgraph cluster_asg {
+    label="Module: Nginx ASG";
+    style=filled;
+    fillcolor="#E1BEE7";
+    "Nginx ASG" [label="Nginx ASG\n(module.nginx_asg)"];
+    "Key Pair" [label="Key Pair\n(module.nginx_asg.key_pair_name)", shape=ellipse, fillcolor=white];
+  }
 
-  // ALB target group used by ASG
-  "module.alb" -> "module.asg" [label="provides target group ARN", color=purple];
+  // RDS Module Cluster
+  subgraph cluster_rds {
+    label="Module: RDS";
+    style=filled;
+    fillcolor="#FFCDD2";
+    "RDS" [label="RDS\n(module.rds)"];
+  }
 
-  // Security module provides IAM and instance profile for ASG instances
-  "module.security" -> "module.asg" [label="provides instance profile", color=violet];
+  // Bastion Module Cluster
+  subgraph cluster_bastion {
+    label="Module: Bastion";
+    style=filled;
+    fillcolor="#CCECFF";
+    "Bastion" [label="Bastion\n(module.bastion)"];
+  }
 
-  // Bastion uses key pair from ASG (dashed to indicate a soft dependency)
-  "module.asg" -> "module.bastion" [label="key pair dependency", style=dashed, color=gray];
+  // Jenkins Module Cluster
+  subgraph cluster_jenkins {
+    label="Module: Jenkins";
+    style=filled;
+    fillcolor="#CCFFCC";
+    "Jenkins" [label="Jenkins\n(module.jenkins)"];
+  }
+
+  // ---- Edges describing dependencies ----
+
+  // VPC outputs connect to several modules
+  "VPC" -> "Nginx ALB" [label="vpc_id, public_subnets, alb_sg", color=darkgreen];
+  "VPC" -> "Nginx ASG" [label="private_subnets", color=darkgreen];
+  "VPC" -> "RDS" [label="private_subnets", color=darkgreen];
+  "VPC" -> "Bastion" [label="public_subnet (first)", color=darkgreen];
+  "VPC" -> "Jenkins" [label="public_subnet (first)", color=darkgreen];
+  "VPC" -> "Security" [label="sg IDs: alb, bastion, jenkins, rds", color=darkgreen];
+
+  // S3 bucket data flows
+  "S3 Bucket" -> "Nginx ALB" [label="alb_log_bucket", color=orange];
+  "S3 Bucket" -> "Security" [label="s3_bucket_arn/id", color=orange];
+
+  // ALB target group ARN flows into ASG
+  "Nginx ALB" -> "Nginx ASG" [label="target_group_arn", color=purple];
+
+  // Security module provides instance profile for ASG
+  "Security" -> "Nginx ASG" [label="instance profile", color=brown];
+
+  // ASG Key Pair is used by Bastion and Jenkins
+  "Key Pair" -> "Bastion" [label="key_name", color=blue];
+  "Key Pair" -> "Jenkins" [label="key_name", color=blue];
+
+  // Jenkins uses user data
+  "Jenkins UserData" -> "Jenkins" [label="base64encoded_user_data", color=green];
 }
