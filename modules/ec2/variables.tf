@@ -8,6 +8,12 @@ variable "ec2_name" {
   type        = string
 }
 
+variable "ec2_instance_type" {
+  description = "The EC2 instance type to use"
+  type        = string
+  default     = "t2.micro"
+}
+
 variable "key_name" {
   description = "The name of the key pair to use for SSH access"
   type        = string

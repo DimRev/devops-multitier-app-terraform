@@ -99,13 +99,14 @@ data "template_file" "jenkins_userdata" {
 }
 
 module "jenkins" {
-  source           = "./modules/ec2"
-  ec2_name         = "jenkins"
-  key_name         = module.nginx_asg.key_pair_name
-  public_subnet_id = module.vpc.public_subnet_ids[0]
-  ec2_sg_id        = module.vpc.jenkins_sg_id
-  assign_eip       = true
-  environment      = var.environment
+  source            = "./modules/ec2"
+  ec2_name          = "jenkins"
+  key_name          = module.nginx_asg.key_pair_name
+  public_subnet_id  = module.vpc.public_subnet_ids[0]
+  ec2_sg_id         = module.vpc.jenkins_sg_id
+  ec2_instance_type = "t3.medium"
+  assign_eip        = true
+  environment       = var.environment
 
   base64encoded_user_data = base64encode(data.template_file.jenkins_userdata.rendered)
 }

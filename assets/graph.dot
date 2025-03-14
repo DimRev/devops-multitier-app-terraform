@@ -77,12 +77,14 @@ digraph G {
   "module.bastion.aws_eip_association.eip_assoc" -> "module.bastion.aws_eip.ece_ec2";
   "module.bastion.aws_eip_association.eip_assoc" -> "module.bastion.aws_instance.ec2_instance";
   "module.bastion.aws_instance.ec2_instance" -> "module.bastion.data.aws_ami.amazon_linux_2_free_tier";
+  "module.bastion.aws_instance.ec2_instance" -> "module.nginx_asg.aws_key_pair.my_key";
   "module.bastion.aws_instance.ec2_instance" -> "module.vpc.aws_security_group.bastion_sg";
   "module.bastion.aws_instance.ec2_instance" -> "module.vpc.aws_subnet.public";
   "module.jenkins.aws_eip_association.eip_assoc" -> "module.jenkins.aws_eip.ece_ec2";
   "module.jenkins.aws_eip_association.eip_assoc" -> "module.jenkins.aws_instance.ec2_instance";
   "module.jenkins.aws_instance.ec2_instance" -> "data.template_file.jenkins_userdata";
   "module.jenkins.aws_instance.ec2_instance" -> "module.jenkins.data.aws_ami.amazon_linux_2_free_tier";
+  "module.jenkins.aws_instance.ec2_instance" -> "module.nginx_asg.aws_key_pair.my_key";
   "module.jenkins.aws_instance.ec2_instance" -> "module.vpc.aws_security_group.jenkins_sg";
   "module.jenkins.aws_instance.ec2_instance" -> "module.vpc.aws_subnet.public";
   "module.nginx_alb.aws_lb.main" -> "data.aws_s3_bucket.s3";
@@ -94,6 +96,7 @@ digraph G {
   "module.nginx_alb.aws_lb_listener.https" -> "module.nginx_alb.aws_lb_target_group.main";
   "module.nginx_alb.aws_lb_target_group.main" -> "module.vpc.aws_vpc.main";
   "module.nginx_asg.data.template_file.nginx_userdata" -> "data.aws_s3_bucket.s3";
+  "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.nginx_alb.aws_lb_target_group.main";
   "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.nginx_asg.aws_launch_template.nginx_web_lt";
   "module.nginx_asg.aws_autoscaling_group.nginx_web_asg" -> "module.vpc.aws_subnet.private";
   "module.nginx_asg.aws_autoscaling_policy.scale_in" -> "module.nginx_asg.aws_autoscaling_group.nginx_web_asg";

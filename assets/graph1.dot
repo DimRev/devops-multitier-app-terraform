@@ -1,178 +1,189 @@
-digraph TerraformArchitecture {
-  // Set overall graph attributes
+digraph G {
   rankdir=LR;
-  splines=true;
-  nodesep=0.8;
-  ranksep=1.0;
-  labelloc="t";
-  label="Terraform Architecture Overview";
+  splines=ortho;
+  concentrate=true;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
 
-  // Default node style
-  node [shape=rect, style=filled, fontname="sans-serif", fontsize=10, fillcolor=white];
+  // Global nodes
+  "S3Bucket" [label="S3 Bucket\n(data.aws_s3_bucket.s3)", fillcolor=lightyellow];
+  "JenkinsUserData" [label="Jenkins UserData\n(data.template_file.jenkins_userdata)", fillcolor=lightyellow];
 
-  // Default edge style
-  edge [fontname="sans-serif", fontsize=9, color=gray30];
-
-  // Data Bucket Node
-  "data.aws_s3_bucket.s3" [label="data.aws_s3_bucket.s3", fillcolor="#FFD700"];
-
-  // Module: ALB (Application Load Balancer)
-  subgraph cluster_module_alb {
-    label="module.alb (ALB & Listeners)";
+  // Bastion Module Cluster
+  subgraph cluster_bastion {
+    label="Module: Bastion";
+    color=blue;
     style=filled;
-    color="#AED6F1";
-    node [fillcolor=white];
-    "module.alb.aws_lb.main" [label="aws_lb.main"];
-    "module.alb.aws_lb_listener.http" [label="aws_lb_listener.http"];
-    "module.alb.aws_lb_listener.https" [label="aws_lb_listener.https"];
-    "module.alb.aws_lb_target_group.main" [label="aws_lb_target_group.main"];
+    fillcolor="#CCECFF";
+
+    "BastionAMI" [label="AMI\n(module.bastion.data.aws_ami.amazon_linux_2_free_tier)"];
+    "BastionEIP" [label="EIP\n(module.bastion.aws_eip.ece_ec2)"];
+    "BastionEIPAssoc" [label="EIP Association\n(module.bastion.aws_eip_association.eip_assoc)"];
+    "BastionInstance" [label="Instance\n(module.bastion.aws_instance.ec2_instance)"];
   }
 
-  // Module: ASG (Auto Scaling Group)
-  subgraph cluster_module_asg {
-    label="module.asg (Auto Scaling & Launch Templates)";
+  // Jenkins Module Cluster
+  subgraph cluster_jenkins {
+    label="Module: Jenkins";
+    color=green;
     style=filled;
-    color="#A9DFBF";
-    node [fillcolor=white];
-    "module.asg.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
-    "module.asg.data.template_file.nginx_userdata" [label="data.template_file.nginx_userdata"];
-    "module.asg.aws_autoscaling_group.nginx_web_asg" [label="aws_autoscaling_group.nginx_web_asg"];
-    "module.asg.aws_autoscaling_policy.scale_in" [label="aws_autoscaling_policy.scale_in"];
-    "module.asg.aws_autoscaling_policy.scaling_out" [label="aws_autoscaling_policy.scaling_out"];
-    "module.asg.aws_cloudwatch_metric_alarm.cpu_high" [label="aws_cloudwatch_metric_alarm.cpu_high"];
-    "module.asg.aws_cloudwatch_metric_alarm.cpu_low" [label="aws_cloudwatch_metric_alarm.cpu_low"];
-    "module.asg.aws_key_pair.my_key" [label="aws_key_pair.my_key"];
-    "module.asg.aws_launch_template.nginx_web_lt" [label="aws_launch_template.nginx_web_lt"];
+    fillcolor="#CCFFCC";
+
+    "JenkinsAMI" [label="AMI\n(module.jenkins.data.aws_ami.amazon_linux_2_free_tier)"];
+    "JenkinsEIP" [label="EIP\n(module.jenkins.aws_eip.ece_ec2)"];
+    "JenkinsEIPAssoc" [label="EIP Association\n(module.jenkins.aws_eip_association.eip_assoc)"];
+    "JenkinsInstance" [label="Instance\n(module.jenkins.aws_instance.ec2_instance)"];
   }
 
-  // Module: Bastion
-  subgraph cluster_module_bastion {
-    label="module.bastion (Bastion Host)";
+  // Nginx ALB Module Cluster
+  subgraph cluster_nginx_alb {
+    label="Module: Nginx ALB";
+    color=orange;
     style=filled;
-    color="#F9E79F";
-    node [fillcolor=white];
-    "module.bastion.data.aws_ami.amazon_linux_2_free_tier" [label="data.aws_ami.amazon_linux_2_free_tier"];
-    "module.bastion.aws_instance.bastion" [label="aws_instance.bastion"];
-    "module.bastion.aws_security_group.bastion_sg" [label="aws_security_group.bastion_sg"];
+    fillcolor="#FFE0B2";
+
+    "ALB" [label="Load Balancer\n(module.nginx_alb.aws_lb.main)"];
+    "ALBListenerHTTP" [label="Listener HTTP\n(module.nginx_alb.aws_lb_listener.http)"];
+    "ALBListenerHTTPS" [label="Listener HTTPS\n(module.nginx_alb.aws_lb_listener.https)"];
+    "ALBTargetGroup" [label="Target Group\n(module.nginx_alb.aws_lb_target_group.main)"];
   }
 
-  // Module: RDS
-  subgraph cluster_module_rds {
-    label="module.rds (RDS)";
+  // Nginx ASG Module Cluster
+  subgraph cluster_nginx_asg {
+    label="Module: Nginx ASG";
+    color=purple;
     style=filled;
-    color="#F5B7B1";
-    node [fillcolor=white];
-    "module.rds.aws_db_instance.default" [label="aws_db_instance.default"];
-    "module.rds.aws_db_subnet_group.default" [label="aws_db_subnet_group.default"];
+    fillcolor="#E1BEE7";
+
+    "ASGAMI" [label="AMI\n(module.nginx_asg.data.aws_ami.amazon_linux_2_free_tier)"];
+    "ASGUserData" [label="UserData\n(module.nginx_asg.data.template_file.nginx_userdata)"];
+    "ASGLaunchTemplate" [label="Launch Template\n(module.nginx_asg.aws_launch_template.nginx_web_lt)"];
+    "ASGKeyPair" [label="Key Pair\n(module.nginx_asg.aws_key_pair.my_key)"];
+    "ASGAutoScalingGroup" [label="ASG\n(module.nginx_asg.aws_autoscaling_group.nginx_web_asg)"];
+    "ASGScaleIn" [label="Scale In Policy\n(module.nginx_asg.aws_autoscaling_policy.scale_in)"];
+    "ASGScaleOut" [label="Scale Out Policy\n(module.nginx_asg.aws_autoscaling_policy.scaling_out)"];
+    "ASGAlarmCPUHigh" [label="CW Alarm High\n(module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_high)"];
+    "ASGAlarmCPULow" [label="CW Alarm Low\n(module.nginx_asg.aws_cloudwatch_metric_alarm.cpu_low)"];
   }
 
-  // Module: Security
-  subgraph cluster_module_security {
-    label="module.security (IAM & Bucket Policies)";
+  // RDS Module Cluster
+  subgraph cluster_rds {
+    label="Module: RDS";
+    color=red;
     style=filled;
-    color="#D7BDE2";
-    node [fillcolor=white];
-    "module.security.aws_iam_instance_profile.ec2_profile" [label="aws_iam_instance_profile.ec2_profile"];
-    "module.security.aws_iam_policy.ec2_policy" [label="aws_iam_policy.ec2_policy"];
-    "module.security.aws_iam_role.ec2_role" [label="aws_iam_role.ec2_role"];
-    "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" [label="aws_iam_role_policy_attachment.ec2_policy_attachment"];
-    "module.security.aws_s3_bucket_policy.alb_logs_policy" [label="aws_s3_bucket_policy.alb_logs_policy"];
+    fillcolor="#FFCDD2";
+
+    "RDSInstance" [label="DB Instance\n(module.rds.aws_db_instance.default)"];
+    "RDSSubnetGroup" [label="DB Subnet Group\n(module.rds.aws_db_subnet_group.default)"];
   }
 
-  // Module: VPC & Networking
-  subgraph cluster_module_vpc {
-    label="module.vpc (Networking)";
+  // Security Module Cluster
+  subgraph cluster_security {
+    label="Module: Security";
+    color=brown;
     style=filled;
-    color="#FAD7A0";
-    node [fillcolor=white];
-    "module.vpc.aws_eip.nat_eip" [label="aws_eip.nat_eip"];
-    "module.vpc.aws_internet_gateway.igw" [label="aws_internet_gateway.igw"];
-    "module.vpc.aws_nat_gateway.nat" [label="aws_nat_gateway.nat"];
-    "module.vpc.aws_route_table.private_rt" [label="aws_route_table.private_rt"];
-    "module.vpc.aws_route_table.public_rt" [label="aws_route_table.public_rt"];
-    "module.vpc.aws_route_table_association.private_association" [label="aws_route_table_association.private_association"];
-    "module.vpc.aws_route_table_association.public_association" [label="aws_route_table_association.public_association"];
-    "module.vpc.aws_security_group.alb_sg" [label="aws_security_group.alb_sg"];
-    "module.vpc.aws_security_group.ec2_sg" [label="aws_security_group.ec2_sg"];
-    "module.vpc.aws_security_group.rds_sg" [label="aws_security_group.rds_sg"];
-    "module.vpc.aws_subnet.private" [label="aws_subnet.private"];
-    "module.vpc.aws_subnet.public" [label="aws_subnet.public"];
-    "module.vpc.aws_vpc.main" [label="aws_vpc.main"];
+    fillcolor="#F5E1D7";
+
+    "EC2InstanceProfile" [label="Instance Profile\n(module.security.aws_iam_instance_profile.ec2_profile)"];
+    "EC2IAMPolicy" [label="IAM Policy\n(module.security.aws_iam_policy.ec2_policy)"];
+    "EC2IAMRole" [label="IAM Role\n(module.security.aws_iam_role.ec2_role)"];
+    "EC2RolePolicyAttach" [label="Role Policy Attachment\n(module.security.aws_iam_role_policy_attachment.ec2_policy_attachment)"];
+    "ALBLogsBucketPolicy" [label="S3 Bucket Policy\n(module.security.aws_s3_bucket_policy.alb_logs_policy)"];
   }
 
-  // -------------------- Edges with Descriptive Labels --------------------
+  // VPC Module Cluster
+  subgraph cluster_vpc {
+    label="Module: VPC";
+    color=darkgreen;
+    style=filled;
+    fillcolor="#C8E6C9";
 
-  // ALB -> S3 bucket (Access logs)
-  "module.alb.aws_lb.main" -> "data.aws_s3_bucket.s3" [label="configures access_logs", color=blue];
+    "NATEIP" [label="NAT EIP\n(module.vpc.aws_eip.nat_eip)"];
+    "IGW" [label="Internet Gateway\n(module.vpc.aws_internet_gateway.igw)"];
+    "NATGateway" [label="NAT Gateway\n(module.vpc.aws_nat_gateway.nat)"];
+    "PrivateRT" [label="Private Route Table\n(module.vpc.aws_route_table.private_rt)"];
+    "PublicRT" [label="Public Route Table\n(module.vpc.aws_route_table.public_rt)"];
+    "PrivateAssoc" [label="Private Route Association\n(module.vpc.aws_route_table_association.private_association)"];
+    "PublicAssoc" [label="Public Route Association\n(module.vpc.aws_route_table_association.public_association)"];
+    "ALBSG" [label="ALB SG\n(module.vpc.aws_security_group.alb_sg)"];
+    "BastionSG" [label="Bastion SG\n(module.vpc.aws_security_group.bastion_sg)"];
+    "EC2SG" [label="EC2 SG\n(module.vpc.aws_security_group.ec2_sg)"];
+    "JenkinsSG" [label="Jenkins SG\n(module.vpc.aws_security_group.jenkins_sg)"];
+    "RDSSG" [label="RDS SG\n(module.vpc.aws_security_group.rds_sg)"];
+    "PrivateSubnet" [label="Private Subnet\n(module.vpc.aws_subnet.private)"];
+    "PublicSubnet" [label="Public Subnet\n(module.vpc.aws_subnet.public)"];
+    "VPC" [label="VPC\n(module.vpc.aws_vpc.main)"];
+  }
 
-  // ALB -> VPC Security Group & Subnets
-  "module.alb.aws_lb.main" -> "module.vpc.aws_security_group.alb_sg" [label="attached security group", color=blue];
-  "module.alb.aws_lb.main" -> "module.vpc.aws_subnet.public" [label="placed in public subnet", color=blue];
+  // --- Edges with labels ---
+  // Bastion edges
+  "BastionEIPAssoc" -> "BastionEIP" [label="associates", color=blue];
+  "BastionEIPAssoc" -> "BastionInstance" [label="attaches EIP to", color=blue];
+  "BastionInstance" -> "BastionAMI" [label="uses", color=blue];
+  "BastionInstance" -> "ASGKeyPair" [label="uses key", color=blue];
+  "BastionInstance" -> "BastionSG" [label="belongs to", color=blue];
+  "BastionInstance" -> "PublicSubnet" [label="deployed in", color=blue];
 
-  // Listeners use the ALB and target group
-  "module.alb.aws_lb_listener.http" -> "module.alb.aws_lb.main" [label="listens on HTTP", color=darkgreen];
-  "module.alb.aws_lb_listener.http" -> "module.alb.aws_lb_target_group.main" [label="routes traffic", color=darkgreen];
-  "module.alb.aws_lb_listener.https" -> "module.alb.aws_lb.main" [label="listens on HTTPS", color=darkgreen];
-  "module.alb.aws_lb_listener.https" -> "module.alb.aws_lb_target_group.main" [label="routes traffic", color=darkgreen];
+  // Jenkins edges
+  "JenkinsEIPAssoc" -> "JenkinsEIP" [label="associates", color=green];
+  "JenkinsEIPAssoc" -> "JenkinsInstance" [label="attaches EIP to", color=green];
+  "JenkinsInstance" -> "JenkinsUserData" [label="applies", color=green];
+  "JenkinsInstance" -> "JenkinsAMI" [label="uses", color=green];
+  "JenkinsInstance" -> "ASGKeyPair" [label="uses key", color=green];
+  "JenkinsInstance" -> "JenkinsSG" [label="belongs to", color=green];
+  "JenkinsInstance" -> "PublicSubnet" [label="deployed in", color=green];
 
-  // Target group dependency on VPC
-  "module.alb.aws_lb_target_group.main" -> "module.vpc.aws_vpc.main" [label="VPC association", color=purple];
+  // Nginx ALB edges
+  "ALB" -> "S3Bucket" [label="stores logs in", color=orange];
+  "ALB" -> "ALBSG" [label="protected by", color=orange];
+  "ALB" -> "PublicSubnet" [label="deployed in", color=orange];
+  "ALBListenerHTTP" -> "ALB" [label="listens on HTTP", color=orange];
+  "ALBListenerHTTP" -> "ALBTargetGroup" [label="routes to", color=orange];
+  "ALBListenerHTTPS" -> "ALB" [label="listens on HTTPS", color=orange];
+  "ALBListenerHTTPS" -> "ALBTargetGroup" [label="routes to", color=orange];
+  "ALBTargetGroup" -> "VPC" [label="within", color=orange];
 
-  // ASG: UserData depends on S3 Bucket for templates
-  "module.asg.data.template_file.nginx_userdata" -> "data.aws_s3_bucket.s3" [label="fetches userdata script", color=orange];
+  // Nginx ASG edges
+  "ASGUserData" -> "S3Bucket" [label="loads from", color=purple];
+  "ASGAutoScalingGroup" -> "ALBTargetGroup" [label="registers with", color=purple];
+  "ASGAutoScalingGroup" -> "ASGLaunchTemplate" [label="based on", color=purple];
+  "ASGAutoScalingGroup" -> "PrivateSubnet" [label="deployed in", color=purple];
+  "ASGScaleIn" -> "ASGAutoScalingGroup" [label="scales in", color=purple];
+  "ASGScaleOut" -> "ASGAutoScalingGroup" [label="scales out", color=purple];
+  "ASGAlarmCPUHigh" -> "ASGScaleOut" [label="triggers", color=purple];
+  "ASGAlarmCPULow" -> "ASGScaleIn" [label="triggers", color=purple];
+  "ASGLaunchTemplate" -> "ASGAMI" [label="uses", color=purple];
+  "ASGLaunchTemplate" -> "ASGUserData" [label="includes", color=purple];
+  "ASGLaunchTemplate" -> "ASGKeyPair" [label="uses key", color=purple];
+  "ASGLaunchTemplate" -> "EC2SG" [label="applies", color=purple];
 
-  // ASG connects to Target Group and Launch Template
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.alb.aws_lb_target_group.main" [label="registered as targets", color=red];
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.asg.aws_launch_template.nginx_web_lt" [label="launch config", color=red];
-  "module.asg.aws_autoscaling_group.nginx_web_asg" -> "module.vpc.aws_subnet.private" [label="in private subnet", color=red];
+  // RDS edges
+  "RDSInstance" -> "RDSSubnetGroup" [label="belongs to", color=red];
+  "RDSInstance" -> "RDSSG" [label="protected by", color=red];
+  "RDSSubnetGroup" -> "PrivateSubnet" [label="within", color=red];
 
-  // ASG policies and alarms linked to ASG
-  "module.asg.aws_autoscaling_policy.scale_in" -> "module.asg.aws_autoscaling_group.nginx_web_asg" [label="scale in", color=brown];
-  "module.asg.aws_autoscaling_policy.scaling_out" -> "module.asg.aws_autoscaling_group.nginx_web_asg" [label="scale out", color=brown];
-  "module.asg.aws_cloudwatch_metric_alarm.cpu_high" -> "module.asg.aws_autoscaling_policy.scaling_out" [label="triggers scale out", color=brown];
-  "module.asg.aws_cloudwatch_metric_alarm.cpu_low" -> "module.asg.aws_autoscaling_policy.scale_in" [label="triggers scale in", color=brown];
+  // Security edges
+  "EC2InstanceProfile" -> "EC2IAMRole" [label="attached to", color=brown];
+  "EC2IAMPolicy" -> "S3Bucket" [label="grants access to", color=brown];
+  "EC2RolePolicyAttach" -> "EC2IAMPolicy" [label="attaches", color=brown];
+  "EC2RolePolicyAttach" -> "EC2IAMRole" [label="applies to", color=brown];
+  "ALBLogsBucketPolicy" -> "S3Bucket" [label="enforces", color=brown];
 
-  // ASG Launch Template dependencies
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.data.aws_ami.amazon_linux_2_free_tier" [label="uses AMI", color=teal];
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.data.template_file.nginx_userdata" [label="includes userdata", color=teal];
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.asg.aws_key_pair.my_key" [label="uses key pair", color=teal];
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.security.aws_iam_instance_profile.ec2_profile" [label="attached IAM profile", color=teal];
-  "module.asg.aws_launch_template.nginx_web_lt" -> "module.vpc.aws_security_group.ec2_sg" [label="attached security group", color=teal];
-
-  // Bastion connections
-  "module.bastion.aws_instance.bastion" -> "module.asg.aws_key_pair.my_key" [label="uses key pair", color=maroon];
-  "module.bastion.aws_instance.bastion" -> "module.bastion.data.aws_ami.amazon_linux_2_free_tier" [label="uses AMI", color=maroon];
-  "module.bastion.aws_instance.bastion" -> "module.bastion.aws_security_group.bastion_sg" [label="attached SG", color=maroon];
-  "module.bastion.aws_instance.bastion" -> "module.vpc.aws_subnet.public" [label="in public subnet", color=maroon];
-
-  // Bastion SG depends on VPC
-  "module.bastion.aws_security_group.bastion_sg" -> "module.vpc.aws_vpc.main" [label="VPC association", color=maroon];
-
-  // RDS dependencies
-  "module.rds.aws_db_instance.default" -> "module.rds.aws_db_subnet_group.default" [label="uses subnet group", color=darkorange];
-  "module.rds.aws_db_instance.default" -> "module.vpc.aws_security_group.rds_sg" [label="attached security group", color=darkorange];
-  "module.rds.aws_db_subnet_group.default" -> "module.vpc.aws_subnet.private" [label="in private subnet", color=darkorange];
-
-  // Security module dependencies
-  "module.security.aws_iam_instance_profile.ec2_profile" -> "module.security.aws_iam_role.ec2_role" [label="IAM profile trusts role", color=violet];
-  "module.security.aws_iam_policy.ec2_policy" -> "data.aws_s3_bucket.s3" [label="policy grants S3 read", color=violet];
-  "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" -> "module.security.aws_iam_policy.ec2_policy" [label="attaches policy", color=violet];
-  "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" -> "module.security.aws_iam_role.ec2_role" [label="attaches to role", color=violet];
-  "module.security.aws_s3_bucket_policy.alb_logs_policy" -> "data.aws_s3_bucket.s3" [label="controls ALB log writes", color=violet];
-
-  // VPC & Networking dependencies
-  "module.vpc.aws_internet_gateway.igw" -> "module.vpc.aws_vpc.main" [label="IGW for VPC", color=gray];
-  "module.vpc.aws_nat_gateway.nat" -> "module.vpc.aws_eip.nat_eip" [label="associated EIP", color=gray];
-  "module.vpc.aws_nat_gateway.nat" -> "module.vpc.aws_subnet.public" [label="in public subnet", color=gray];
-  "module.vpc.aws_route_table.private_rt" -> "module.vpc.aws_nat_gateway.nat" [label="routes private traffic", color=gray];
-  "module.vpc.aws_route_table.public_rt" -> "module.vpc.aws_internet_gateway.igw" [label="routes public traffic", color=gray];
-  "module.vpc.aws_route_table_association.private_association" -> "module.vpc.aws_route_table.private_rt" [label="associates private subnet", color=gray];
-  "module.vpc.aws_route_table_association.private_association" -> "module.vpc.aws_subnet.private" [label="private subnet", color=gray];
-  "module.vpc.aws_route_table_association.public_association" -> "module.vpc.aws_route_table.public_rt" [label="associates public subnet", color=gray];
-  "module.vpc.aws_route_table_association.public_association" -> "module.vpc.aws_subnet.public" [label="public subnet", color=gray];
-  "module.vpc.aws_security_group.alb_sg" -> "module.vpc.aws_vpc.main" [label="SG in VPC", color=gray];
-  "module.vpc.aws_security_group.ec2_sg" -> "module.vpc.aws_security_group.alb_sg" [label="depends on ALB SG", color=gray];
-  "module.vpc.aws_security_group.rds_sg" -> "module.vpc.aws_security_group.ec2_sg" [label="SG chain", color=gray];
-  "module.vpc.aws_subnet.private" -> "module.vpc.aws_vpc.main" [label="belongs to VPC", color=gray];
-  "module.vpc.aws_subnet.public" -> "module.vpc.aws_vpc.main" [label="belongs to VPC", color=gray];
+  // VPC edges
+  "IGW" -> "VPC" [label="connects to", color=darkgreen];
+  "NATGateway" -> "NATEIP" [label="uses", color=darkgreen];
+  "NATGateway" -> "PublicSubnet" [label="deployed in", color=darkgreen];
+  "PrivateRT" -> "NATGateway" [label="routes via", color=darkgreen];
+  "PublicRT" -> "IGW" [label="routes via", color=darkgreen];
+  "PrivateAssoc" -> "PrivateRT" [label="associates with", color=darkgreen];
+  "PrivateAssoc" -> "PrivateSubnet" [label="applies to", color=darkgreen];
+  "PublicAssoc" -> "PublicRT" [label="associates with", color=darkgreen];
+  "PublicAssoc" -> "PublicSubnet" [label="applies to", color=darkgreen];
+  "ALBSG" -> "VPC" [label="belongs to", color=darkgreen];
+  "BastionSG" -> "VPC" [label="belongs to", color=darkgreen];
+  "EC2SG" -> "ALBSG" [label="inherits from", color=darkgreen];
+  "JenkinsSG" -> "VPC" [label="belongs to", color=darkgreen];
+  "RDSSG" -> "EC2SG" [label="inherits from", color=darkgreen];
+  "PrivateSubnet" -> "VPC" [label="contained in", color=darkgreen];
+  "PublicSubnet" -> "VPC" [label="contained in", color=darkgreen];
 }

@@ -20,7 +20,7 @@ data "aws_ami" "amazon_linux_2_free_tier" {
 
 resource "aws_instance" "ec2_instance" {
   ami                    = data.aws_ami.amazon_linux_2_free_tier.id
-  instance_type          = "t2.micro"
+  instance_type          = var.ec2_instance_type
   key_name               = var.key_name
   subnet_id              = var.public_subnet_id
   vpc_security_group_ids = [var.ec2_sg_id]
