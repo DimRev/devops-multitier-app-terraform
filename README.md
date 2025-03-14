@@ -74,6 +74,14 @@ terraform apply
 
    - Key outputs include the ALB DNS name, ASG details, RDS endpoint, and Bastion Host public IP.
 
+## Cleanup
+
+To destroy all resources created by this Terraform configuration, run the following command:
+
+```bash
+terraform destroy
+```
+
 ## Debugging & SSH Access
 
 - **Bastion Host Access**:

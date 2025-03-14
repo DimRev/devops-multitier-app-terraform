@@ -6,12 +6,17 @@ variable "alb_name" {
   default     = "multitier-app-alb"
 }
 
-variable "security_groups" {
+variable "alb_log_bucket" {
+  description = "The name of the S3 bucket to store ALB logs."
+  type        = string
+}
+
+variable "alb_security_groups" {
   description = "The security groups to associate with the ALB."
   type        = list(string)
 }
 
-variable "subnets" {
+variable "alb_subnets" {
   description = "The subnets to associate with the ALB."
   type        = list(string)
 }

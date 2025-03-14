@@ -4,6 +4,10 @@ variable "ec2_role_name" {
   default     = "ec2-instance-role"
 }
 
+variable "s3_bucket_id" {
+  description = "The name of the S3 bucket"
+  type        = string
+}
 variable "s3_bucket_arn" {
   description = "ARN of the S3 bucket to grant access"
   type        = string
@@ -14,4 +18,6 @@ variable "instance_profile_name" {
   type        = string
   default     = "ec2-instance-profile"
 }
+
+
 

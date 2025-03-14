@@ -1,3 +1,28 @@
+resource "aws_s3_bucket_policy" "alb_logs_policy" {
+  bucket = var.s3_bucket_id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "AllowALBLogging",
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::127311923021:root"
+        },
+        Action   = "s3:PutObject",
+        Resource = "${var.s3_bucket_arn}/logs/alb/*",
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" : "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+
+
 resource "aws_iam_role" "ec2_role" {
   name = var.ec2_role_name
 

@@ -1,22 +1,44 @@
-digraph Modules {
-  rankdir="LR";
-  node [shape=box, style=filled, fontname="sans-serif"];
+digraph ModuleStructure {
+  // Global graph settings
+  rankdir=LR;
+  splines=true;
+  nodesep=0.8;
+  ranksep=1.0;
+  labelloc="t";
+  label="Terraform Project Module Structure";
 
-  VPC      [label="VPC Module", fillcolor="cyan"];
-  ALB      [label="ALB Module", fillcolor="lightblue"];
-  ASG      [label="ASG Module", fillcolor="lightgreen"];
-  BASTION  [label="Bastion Module", fillcolor="yellow"];
-  RDS      [label="RDS Module", fillcolor="pink"];
-  SEC      [label="Security Module", fillcolor="lightgrey"];
-  S3       [label="S3 Module", fillcolor="gold"];
+  // Default node style
+  node [shape=box, style=filled, fontname="sans-serif", fontsize=10, fillcolor="#ECF0F1"];
 
-  // Relationships between modules
-  VPC -> ALB;
-  VPC -> ASG;
-  VPC -> RDS;
-  VPC -> BASTION;
-  SEC -> ASG;
-  SEC -> RDS;
-  BASTION -> ASG [label="Debug/SSH"];
-  S3 -> VPC [label="Remote State"];
+  // Data resource node (external)
+  "data.aws_s3_bucket.s3" [label="data.aws_s3_bucket.s3", fillcolor="#F9E79F"];
+
+  // Module nodes
+  "module.vpc"      [label="module.vpc", fillcolor="#AED6F1"];
+  "module.alb"      [label="module.alb", fillcolor="#A9DFBF"];
+  "module.asg"      [label="module.asg", fillcolor="#FAD7A0"];
+  "module.rds"      [label="module.rds", fillcolor="#F5B7B1"];
+  "module.security" [label="module.security", fillcolor="#D7BDE2"];
+  "module.bastion"  [label="module.bastion", fillcolor="#F9E79F"];
+
+  // Edges with descriptive labels
+  // VPC provides networking information to ALB, ASG, RDS, and Bastion
+  "module.vpc" -> "module.alb" [label="provides VPC ID,\npublic subnets, ALB SG", color=blue];
+  "module.vpc" -> "module.asg" [label="provides private subnets", color=blue];
+  "module.vpc" -> "module.rds" [label="provides VPC & private subnets", color=blue];
+  "module.vpc" -> "module.bastion" [label="provides VPC & public subnet", color=blue];
+
+  // Data S3 Bucket for shared files and logging
+  "data.aws_s3_bucket.s3" -> "module.alb" [label="bucket for ALB logs", color=darkgreen];
+  "data.aws_s3_bucket.s3" -> "module.asg" [label="userdata source", color=darkgreen];
+  "data.aws_s3_bucket.s3" -> "module.security" [label="bucket ARN/ID", color=darkgreen];
+
+  // ALB target group used by ASG
+  "module.alb" -> "module.asg" [label="provides target group ARN", color=purple];
+
+  // Security module provides IAM and instance profile for ASG instances
+  "module.security" -> "module.asg" [label="provides instance profile", color=violet];
+
+  // Bastion uses key pair from ASG (dashed to indicate a soft dependency)
+  "module.asg" -> "module.bastion" [label="key pair dependency", style=dashed, color=gray];
 }

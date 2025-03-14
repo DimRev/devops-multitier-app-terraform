@@ -43,6 +43,7 @@ digraph G {
     "module.security.aws_iam_policy.ec2_policy" [label="aws_iam_policy.ec2_policy"];
     "module.security.aws_iam_role.ec2_role" [label="aws_iam_role.ec2_role"];
     "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" [label="aws_iam_role_policy_attachment.ec2_policy_attachment"];
+    "module.security.aws_s3_bucket_policy.alb_logs_policy" [label="aws_s3_bucket_policy.alb_logs_policy"];
   }
   subgraph "cluster_module.vpc" {
     label = "module.vpc"
@@ -61,6 +62,7 @@ digraph G {
     "module.vpc.aws_subnet.public" [label="aws_subnet.public"];
     "module.vpc.aws_vpc.main" [label="aws_vpc.main"];
   }
+  "module.alb.aws_lb.main" -> "data.aws_s3_bucket.s3";
   "module.alb.aws_lb.main" -> "module.vpc.aws_security_group.alb_sg";
   "module.alb.aws_lb.main" -> "module.vpc.aws_subnet.public";
   "module.alb.aws_lb_listener.http" -> "module.alb.aws_lb.main";
@@ -93,6 +95,7 @@ digraph G {
   "module.security.aws_iam_policy.ec2_policy" -> "data.aws_s3_bucket.s3";
   "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" -> "module.security.aws_iam_policy.ec2_policy";
   "module.security.aws_iam_role_policy_attachment.ec2_policy_attachment" -> "module.security.aws_iam_role.ec2_role";
+  "module.security.aws_s3_bucket_policy.alb_logs_policy" -> "data.aws_s3_bucket.s3";
   "module.vpc.aws_internet_gateway.igw" -> "module.vpc.aws_vpc.main";
   "module.vpc.aws_nat_gateway.nat" -> "module.vpc.aws_eip.nat_eip";
   "module.vpc.aws_nat_gateway.nat" -> "module.vpc.aws_subnet.public";

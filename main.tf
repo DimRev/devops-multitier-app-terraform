@@ -10,10 +10,12 @@ module "vpc" {
 }
 
 module "alb" {
-  source          = "./modules/alb"
-  security_groups = [module.vpc.alb_sg_id]
-  vpc_id          = module.vpc.vpc_id
-  subnets         = module.vpc.public_subnet_ids
+  source = "./modules/alb"
+  vpc_id = module.vpc.vpc_id
+
+  alb_security_groups = [module.vpc.alb_sg_id]
+  alb_subnets         = module.vpc.public_subnet_ids
+  alb_log_bucket      = data.aws_s3_bucket.s3.bucket
 
   enable_https        = false
   healthy_threshold   = 3
@@ -70,6 +72,7 @@ module "security" {
   source                = "./modules/security"
   ec2_role_name         = "ec2-role"
   s3_bucket_arn         = data.aws_s3_bucket.s3.arn
+  s3_bucket_id          = data.aws_s3_bucket.s3.id
   instance_profile_name = "ec2-instance-profile"
 }
 
