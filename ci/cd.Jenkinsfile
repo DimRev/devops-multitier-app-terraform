@@ -43,6 +43,16 @@ pipeline {
                 }
             }
         }
+        stage('Terraform Apply') {
+            steps {
+                // Request user input before applying changes
+                input message: 'Do you want to apply the Terraform changes?'
+                // Apply changes if approved
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) {
+                    sh 'terraform apply -auto-approve -no-color -var "public_key_path=${WORKSPACE}/id_rsa.pub"'
+                }
+            }
+        }
     }
     post {
         always {

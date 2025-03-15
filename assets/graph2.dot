@@ -1,11 +1,39 @@
 digraph ProjectStructure {
-  rankdir=LR;
+  // Layout and spacing
+  rankdir="LR";
   splines=ortho;
-  concentrate=true;
-  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
-  edge [fontname="Helvetica", fontsize=9];
 
-  // Global Nodes
+  // The "graph" block controls overall spacing and padding
+  graph [
+    pad="1.0",       // padding around the graph
+    ranksep="2.0",   // vertical spacing between ranks
+    nodesep="1.0"    // horizontal spacing between nodes
+  ];
+
+  bgcolor="#ffffff";
+  fontname="Helvetica";
+  fontsize=10;
+  label="Terraform Module Dependency Graph";
+  labelloc="t";
+  labeljust="c";
+
+  // Global Node Styling
+  node [
+    shape="box",
+    style="rounded,filled",
+    fontname="Helvetica",
+    fontsize=10,
+    fillcolor="#E8E8E8",
+    color="#333333"
+  ];
+  edge [
+    fontname="Helvetica",
+    fontsize=9,
+    color="#666666",
+    arrowhead="vee"
+  ];
+
+  // Global Nodes (data sources)
   "S3 Bucket" [label="S3 Bucket\n(data.aws_s3_bucket.s3)", fillcolor=lightyellow];
   "Jenkins UserData" [label="Jenkins UserData\n(data.template_file.jenkins_userdata)", fillcolor=lightyellow];
 
@@ -15,14 +43,6 @@ digraph ProjectStructure {
     style=filled;
     fillcolor="#C8E6C9";
     "VPC" [label="VPC\n(module.vpc)"];
-  }
-
-  // Security Module Cluster
-  subgraph cluster_security {
-    label="Module: Security";
-    style=filled;
-    fillcolor="#F5E1D7";
-    "Security" [label="Security\n(module.security)"];
   }
 
   // Nginx ALB Module Cluster
@@ -50,6 +70,14 @@ digraph ProjectStructure {
     "RDS" [label="RDS\n(module.rds)"];
   }
 
+  // Security Module Cluster
+  subgraph cluster_security {
+    label="Module: Security";
+    style=filled;
+    fillcolor="#F5E1D7";
+    "Security" [label="Security\n(module.security)"];
+  }
+
   // Bastion Module Cluster
   subgraph cluster_bastion {
     label="Module: Bastion";
@@ -66,30 +94,25 @@ digraph ProjectStructure {
     "Jenkins" [label="Jenkins\n(module.jenkins)"];
   }
 
-  // ---- Edges describing dependencies ----
+  // ---- Edges (Dependencies) ----
+  // Using xlabel so labels show on orthogonal edges
+  "VPC" -> "Nginx ALB" [xlabel="vpc_id, public_subnet_ids, alb_sg_id", color=darkgreen];
+  "VPC" -> "Nginx ASG" [xlabel="private_subnet_ids, ec2_sg_id", color=darkgreen];
+  "VPC" -> "RDS"       [xlabel="private_subnet_ids, rds_sg_id", color=darkgreen];
+  "VPC" -> "Bastion"   [xlabel="public_subnet (first), bastion_sg_id", color=darkgreen];
+  "VPC" -> "Jenkins"   [xlabel="public_subnet (first), jenkins_sg_id", color=darkgreen];
+  "VPC" -> "Security"  [xlabel="vpc security groups", color=darkgreen];
 
-  // VPC outputs connect to several modules
-  "VPC" -> "Nginx ALB" [label="vpc_id, public_subnets, alb_sg", color=darkgreen];
-  "VPC" -> "Nginx ASG" [label="private_subnets", color=darkgreen];
-  "VPC" -> "RDS" [label="private_subnets", color=darkgreen];
-  "VPC" -> "Bastion" [label="public_subnet (first)", color=darkgreen];
-  "VPC" -> "Jenkins" [label="public_subnet (first)", color=darkgreen];
-  "VPC" -> "Security" [label="sg IDs: alb, bastion, jenkins, rds", color=darkgreen];
+  "S3 Bucket" -> "Nginx ALB" [xlabel="alb_log_bucket", color=orange];
+  "S3 Bucket" -> "Security"  [xlabel="s3_bucket_arn", color=orange];
+  "S3 Bucket" -> "Nginx ASG" [xlabel="s3_bucket_name", color=orange];
 
-  // S3 bucket data flows
-  "S3 Bucket" -> "Nginx ALB" [label="alb_log_bucket", color=orange];
-  "S3 Bucket" -> "Security" [label="s3_bucket_arn/id", color=orange];
+  "Nginx ALB" -> "Nginx ASG" [xlabel="target_group_arn", color=purple];
 
-  // ALB target group ARN flows into ASG
-  "Nginx ALB" -> "Nginx ASG" [label="target_group_arn", color=purple];
+  "Security" -> "Nginx ASG"  [xlabel="iam_instance_profile", color=brown];
 
-  // Security module provides instance profile for ASG
-  "Security" -> "Nginx ASG" [label="instance profile", color=brown];
+  "Key Pair" -> "Bastion" [xlabel="key_name", color=blue];
+  "Key Pair" -> "Jenkins" [xlabel="key_name", color=blue];
 
-  // ASG Key Pair is used by Bastion and Jenkins
-  "Key Pair" -> "Bastion" [label="key_name", color=blue];
-  "Key Pair" -> "Jenkins" [label="key_name", color=blue];
-
-  // Jenkins uses user data
-  "Jenkins UserData" -> "Jenkins" [label="base64encoded_user_data", color=green];
+  "Jenkins UserData" -> "Jenkins" [xlabel="base64encoded_user_data", color=green];
 }

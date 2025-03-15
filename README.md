@@ -2,6 +2,24 @@
 
 This repository deploys a scalable, secure, and highly available multi-tier web application on AWS using Terraform. The solution leverages modular Terraform code, remote state management, and advanced AWS services.
 
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Module Structure](#module-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+- [Deployment Steps](#deployment-steps)
+- [Debugging & SSH Access](#debugging--ssh-access)
+- [Jenkins Setup](#jenkins-setup)
+  - [Prerequisites](#prerequisites-1)
+  - [Setup](#setup)
+- [Troubleshooting & Tips](#troubleshooting--tips)
+- [Deployment Preview](#deployment-preview)
+  - [VPC Resource Map](#vpc-resource-map)
+  - [ALB Resource Map](#alb-resource-map)
+  - [EC2 Instances](#ec2-instances)
+  - [Serving Page](#serving-page)
+
 ## Architecture Overview
 
 The following diagram illustrates the core architecture:
@@ -75,7 +93,7 @@ terraform apply
 
 4. **Review Outputs**:
 
-   - Key outputs include the ALB DNS name, ASG details, RDS endpoint, and Bastion Host public IP.
+   - Key outputs include the ALB DNS name, ASG details, RDS endpoint, and Bastion Host public IP, and Jenkins public IP.
 
 ## Debugging & SSH Access
 
@@ -106,6 +124,13 @@ ssh ec2-user@<private_instance_ip>
 ## Jenkins Setup
 
 The Jenkins server is deployed as part of the infrastructure and is used to orchestrate Terraform deployments via pipelines.
+
+### Prerequisites:
+
+- IAM Credentials for Jenkins to access AWS resources, will be stored in the Jenkins credentials store as type AWS Credentials under the ID `aws_credentials`.
+- rsa_pub SSH key for Jenkins to inject into the workspace, will be stored in the Jenkins credentials store as type Secret Text under the ID `ssh_rsa_pub`.
+
+### Setup:
 
 1. **Access Jenkins**:
 

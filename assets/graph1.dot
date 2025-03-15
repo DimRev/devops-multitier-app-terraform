@@ -1,13 +1,44 @@
 digraph G {
-  rankdir=LR;
+  // Layout and spacing
+  rankdir="LR";
   splines=ortho;
-  concentrate=true;
-  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
-  edge [fontname="Helvetica", fontsize=9];
+
+  // Increase padding and spacing
+  graph [
+    pad="1.0",       // Padding around the entire graph
+    ranksep="1.5",   // Vertical spacing between ranks
+    nodesep="1.0"    // Horizontal spacing between nodes
+  ];
+
+  // Graph title styling
+  bgcolor="#ffffff";
+  fontname="Helvetica";
+  fontsize=10;
+  label="Terraform Module Dependency Graph";
+  labelloc="t";
+  labeljust="c";
+
+  // Global node styling
+  node [
+    shape="box",
+    style="rounded,filled",
+    fontname="Helvetica",
+    fontsize=10,
+    fillcolor="#E8E8E8",
+    color="#333333"
+  ];
+
+  // Global edge styling
+  edge [
+    fontname="Helvetica",
+    fontsize=9,
+    color="#666666",
+    arrowhead="vee"
+  ];
 
   // Global nodes
   "S3Bucket" [label="S3 Bucket\n(data.aws_s3_bucket.s3)", fillcolor=lightyellow];
-  "JenkinsUserData" [label="Jenkins UserData\n(data.template_file.jenkins_userdata)", fillcolor=lightyellow];
+  "JenkinsUserData" [label="Jenkins User Data\n(data.template_file.jenkins_userdata)", fillcolor=lightyellow];
 
   // Bastion Module Cluster
   subgraph cluster_bastion {
@@ -115,75 +146,77 @@ digraph G {
     "VPC" [label="VPC\n(module.vpc.aws_vpc.main)"];
   }
 
-  // --- Edges with labels ---
   // Bastion edges
-  "BastionEIPAssoc" -> "BastionEIP" [label="associates", color=blue];
-  "BastionEIPAssoc" -> "BastionInstance" [label="attaches EIP to", color=blue];
-  "BastionInstance" -> "BastionAMI" [label="uses", color=blue];
-  "BastionInstance" -> "ASGKeyPair" [label="uses key", color=blue];
-  "BastionInstance" -> "BastionSG" [label="belongs to", color=blue];
-  "BastionInstance" -> "PublicSubnet" [label="deployed in", color=blue];
+  "BastionEIPAssoc" -> "BastionEIP" [xlabel="associates", color=blue];
+  "BastionEIPAssoc" -> "BastionInstance" [xlabel="attaches EIP to", color=blue];
+  "BastionInstance" -> "BastionAMI" [xlabel="uses", color=blue];
+  "BastionInstance" -> "ASGKeyPair" [xlabel="uses key", color=blue];
+  "BastionInstance" -> "BastionSG" [xlabel="belongs to", color=blue];
+  "BastionInstance" -> "PublicSubnet" [xlabel="deployed in", color=blue];
 
   // Jenkins edges
-  "JenkinsEIPAssoc" -> "JenkinsEIP" [label="associates", color=green];
-  "JenkinsEIPAssoc" -> "JenkinsInstance" [label="attaches EIP to", color=green];
-  "JenkinsInstance" -> "JenkinsUserData" [label="applies", color=green];
-  "JenkinsInstance" -> "JenkinsAMI" [label="uses", color=green];
-  "JenkinsInstance" -> "ASGKeyPair" [label="uses key", color=green];
-  "JenkinsInstance" -> "JenkinsSG" [label="belongs to", color=green];
-  "JenkinsInstance" -> "PublicSubnet" [label="deployed in", color=green];
+  "JenkinsEIPAssoc" -> "JenkinsEIP" [xlabel="associates", color=green];
+  "JenkinsEIPAssoc" -> "JenkinsInstance" [xlabel="attaches EIP to", color=green];
+  "JenkinsInstance" -> "JenkinsUserData" [xlabel="applies", color=green];
+  "JenkinsInstance" -> "JenkinsAMI" [xlabel="uses", color=green];
+  "JenkinsInstance" -> "ASGKeyPair" [xlabel="uses key", color=green];
+  "JenkinsInstance" -> "JenkinsSG" [xlabel="belongs to", color=green];
+  "JenkinsInstance" -> "PublicSubnet" [xlabel="deployed in", color=green];
 
   // Nginx ALB edges
-  "ALB" -> "S3Bucket" [label="stores logs in", color=orange];
-  "ALB" -> "ALBSG" [label="protected by", color=orange];
-  "ALB" -> "PublicSubnet" [label="deployed in", color=orange];
-  "ALBListenerHTTP" -> "ALB" [label="listens on HTTP", color=orange];
-  "ALBListenerHTTP" -> "ALBTargetGroup" [label="routes to", color=orange];
-  "ALBListenerHTTPS" -> "ALB" [label="listens on HTTPS", color=orange];
-  "ALBListenerHTTPS" -> "ALBTargetGroup" [label="routes to", color=orange];
-  "ALBTargetGroup" -> "VPC" [label="within", color=orange];
+  "ALB" -> "S3Bucket" [xlabel="stores logs in", color=orange];
+  "ALB" -> "ALBSG" [xlabel="protected by", color=orange];
+  "ALB" -> "PublicSubnet" [xlabel="deployed in", color=orange];
+  "ALBListenerHTTP" -> "ALB" [xlabel="listens on HTTP", color=orange];
+  "ALBListenerHTTP" -> "ALBTargetGroup" [xlabel="routes to", color=orange];
+  "ALBListenerHTTPS" -> "ALB" [xlabel="listens on HTTPS", color=orange];
+  "ALBListenerHTTPS" -> "ALBTargetGroup" [xlabel="routes to", color=orange];
+  "ALBTargetGroup" -> "VPC" [xlabel="within", color=orange];
 
   // Nginx ASG edges
-  "ASGUserData" -> "S3Bucket" [label="loads from", color=purple];
-  "ASGAutoScalingGroup" -> "ALBTargetGroup" [label="registers with", color=purple];
-  "ASGAutoScalingGroup" -> "ASGLaunchTemplate" [label="based on", color=purple];
-  "ASGAutoScalingGroup" -> "PrivateSubnet" [label="deployed in", color=purple];
-  "ASGScaleIn" -> "ASGAutoScalingGroup" [label="scales in", color=purple];
-  "ASGScaleOut" -> "ASGAutoScalingGroup" [label="scales out", color=purple];
-  "ASGAlarmCPUHigh" -> "ASGScaleOut" [label="triggers", color=purple];
-  "ASGAlarmCPULow" -> "ASGScaleIn" [label="triggers", color=purple];
-  "ASGLaunchTemplate" -> "ASGAMI" [label="uses", color=purple];
-  "ASGLaunchTemplate" -> "ASGUserData" [label="includes", color=purple];
-  "ASGLaunchTemplate" -> "ASGKeyPair" [label="uses key", color=purple];
-  "ASGLaunchTemplate" -> "EC2SG" [label="applies", color=purple];
+  "ASGUserData" -> "S3Bucket" [xlabel="loads from", color=purple];
+  "ASGAutoScalingGroup" -> "ALBTargetGroup" [xlabel="registers with", color=purple];
+  "ASGAutoScalingGroup" -> "ASGLaunchTemplate" [xlabel="based on", color=purple];
+  "ASGAutoScalingGroup" -> "PrivateSubnet" [xlabel="deployed in", color=purple];
+  "ASGScaleIn" -> "ASGAutoScalingGroup" [xlabel="scales in", color=purple];
+  "ASGScaleOut" -> "ASGAutoScalingGroup" [xlabel="scales out", color=purple];
+  "ASGAlarmCPUHigh" -> "ASGScaleOut" [xlabel="triggers", color=purple];
+  "ASGAlarmCPULow" -> "ASGScaleIn" [xlabel="triggers", color=purple];
+  "ASGLaunchTemplate" -> "ASGAMI" [xlabel="uses", color=purple];
+  "ASGLaunchTemplate" -> "ASGUserData" [xlabel="includes", color=purple];
+  "ASGLaunchTemplate" -> "ASGKeyPair" [xlabel="uses key", color=purple];
+  "ASGLaunchTemplate" -> "EC2SG" [xlabel="applies", color=purple];
+
+  // The new edge: security’s instance profile is used by the ASG Launch Template
+  "EC2InstanceProfile" -> "ASGLaunchTemplate" [xlabel="referenced by", color=purple];
 
   // RDS edges
-  "RDSInstance" -> "RDSSubnetGroup" [label="belongs to", color=red];
-  "RDSInstance" -> "RDSSG" [label="protected by", color=red];
-  "RDSSubnetGroup" -> "PrivateSubnet" [label="within", color=red];
+  "RDSInstance" -> "RDSSubnetGroup" [xlabel="belongs to", color=red];
+  "RDSInstance" -> "RDSSG" [xlabel="protected by", color=red];
+  "RDSSubnetGroup" -> "PrivateSubnet" [xlabel="within", color=red];
 
   // Security edges
-  "EC2InstanceProfile" -> "EC2IAMRole" [label="attached to", color=brown];
-  "EC2IAMPolicy" -> "S3Bucket" [label="grants access to", color=brown];
-  "EC2RolePolicyAttach" -> "EC2IAMPolicy" [label="attaches", color=brown];
-  "EC2RolePolicyAttach" -> "EC2IAMRole" [label="applies to", color=brown];
-  "ALBLogsBucketPolicy" -> "S3Bucket" [label="enforces", color=brown];
+  "EC2InstanceProfile" -> "EC2IAMRole" [xlabel="attached to", color=brown];
+  "EC2IAMPolicy" -> "S3Bucket" [xlabel="grants access to", color=brown];
+  "EC2RolePolicyAttach" -> "EC2IAMPolicy" [xlabel="attaches", color=brown];
+  "EC2RolePolicyAttach" -> "EC2IAMRole" [xlabel="applies to", color=brown];
+  "ALBLogsBucketPolicy" -> "S3Bucket" [xlabel="enforces", color=brown];
 
   // VPC edges
-  "IGW" -> "VPC" [label="connects to", color=darkgreen];
-  "NATGateway" -> "NATEIP" [label="uses", color=darkgreen];
-  "NATGateway" -> "PublicSubnet" [label="deployed in", color=darkgreen];
-  "PrivateRT" -> "NATGateway" [label="routes via", color=darkgreen];
-  "PublicRT" -> "IGW" [label="routes via", color=darkgreen];
-  "PrivateAssoc" -> "PrivateRT" [label="associates with", color=darkgreen];
-  "PrivateAssoc" -> "PrivateSubnet" [label="applies to", color=darkgreen];
-  "PublicAssoc" -> "PublicRT" [label="associates with", color=darkgreen];
-  "PublicAssoc" -> "PublicSubnet" [label="applies to", color=darkgreen];
-  "ALBSG" -> "VPC" [label="belongs to", color=darkgreen];
-  "BastionSG" -> "VPC" [label="belongs to", color=darkgreen];
-  "EC2SG" -> "ALBSG" [label="inherits from", color=darkgreen];
-  "JenkinsSG" -> "VPC" [label="belongs to", color=darkgreen];
-  "RDSSG" -> "EC2SG" [label="inherits from", color=darkgreen];
-  "PrivateSubnet" -> "VPC" [label="contained in", color=darkgreen];
-  "PublicSubnet" -> "VPC" [label="contained in", color=darkgreen];
+  "IGW" -> "VPC" [xlabel="connects to", color=darkgreen];
+  "NATGateway" -> "NATEIP" [xlabel="uses", color=darkgreen];
+  "NATGateway" -> "PublicSubnet" [xlabel="deployed in", color=darkgreen];
+  "PrivateRT" -> "NATGateway" [xlabel="routes via", color=darkgreen];
+  "PublicRT" -> "IGW" [xlabel="routes via", color=darkgreen];
+  "PrivateAssoc" -> "PrivateRT" [xlabel="associates with", color=darkgreen];
+  "PrivateAssoc" -> "PrivateSubnet" [xlabel="applies to", color=darkgreen];
+  "PublicAssoc" -> "PublicRT" [xlabel="associates with", color=darkgreen];
+  "PublicAssoc" -> "PublicSubnet" [xlabel="applies to", color=darkgreen];
+  "ALBSG" -> "VPC" [xlabel="belongs to", color=darkgreen];
+  "BastionSG" -> "VPC" [xlabel="belongs to", color=darkgreen];
+  "EC2SG" -> "ALBSG" [xlabel="inherits from", color=darkgreen];
+  "JenkinsSG" -> "VPC" [xlabel="belongs to", color=darkgreen];
+  "RDSSG" -> "EC2SG" [xlabel="inherits from", color=darkgreen];
+  "PrivateSubnet" -> "VPC" [xlabel="contained in", color=darkgreen];
+  "PublicSubnet" -> "VPC" [xlabel="contained in", color=darkgreen];
 }
